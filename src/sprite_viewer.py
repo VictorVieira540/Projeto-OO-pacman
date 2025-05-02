@@ -24,7 +24,7 @@ game_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sprite_manager = SpriteManager(game_directory)
 
 # Fator de escala para melhor visualização
-SCALE_FACTOR = 1.0
+SCALE_FACTOR = 2.0
 
 def draw_sprite_set(sprite_set, x, y, label):
     """Desenha um conjunto de sprites horizontalmente com um rótulo."""
