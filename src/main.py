@@ -24,7 +24,7 @@ class Menu:
         # Carregando sons
         self.diretorio_sons = os.path.join(os.path.dirname(__file__), '..', 'assets', 'sounds')
         try:
-            self.som_selecao = pygame.mixer.Sound(os.path.join(self.diretorio_sons, 'eating.mp3'))
+            self.som_selecao = pygame.mixer.Sound(os.path.join(self.diretorio_sons, 'credit.mp3'))
             self.som_confirmacao = pygame.mixer.Sound(os.path.join(self.diretorio_sons, 'eating-fruit.mp3'))
         except pygame.error as e:
             print(f"Erro ao carregar sons: {e}")
