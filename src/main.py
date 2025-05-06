@@ -76,12 +76,16 @@ class Menu:
             self.tempo_animacao = 0
         
         # Usa os sprites reais do Pac-Man
-        if 'right' in self.pacman_sprites and len(self.pacman_sprites['right']) > 0:
+        # Alterna entre as direções a cada seleção para criar um efeito mais dinâmico
+        direcoes = ['right', 'down', 'left', 'up']
+        direcao_atual = direcoes[self.indice_selecao % len(direcoes)]
+        
+        if direcao_atual in self.pacman_sprites and len(self.pacman_sprites[direcao_atual]) > 0:
             # Extrai o sprite correto da animação
-            pacman_img = self.pacman_sprites['right'][self.frame_atual]
+            pacman_img = self.pacman_sprites[direcao_atual][self.frame_atual]
             
             # Aumenta o tamanho do sprite para ficar mais visível no menu
-            pacman_img = self.sprite_manager.scale_sprite(pacman_img, 1.5)
+            pacman_img = self.sprite_manager.scale_sprite(pacman_img, 2.0)
             
             # Posicionando o Pac-Man ao lado da opção selecionada
             rect_pacman = pacman_img.get_rect()

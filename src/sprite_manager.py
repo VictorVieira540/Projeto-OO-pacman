@@ -176,6 +176,18 @@ class SpriteManager:
             (48, y_offset, 16, 16)
         ])
         
+        # Fantasma para cima (2 frames)
+        up = self.load_sprite_set(f'ghost_{color}_up', [
+            (64, y_offset, 16, 16),
+            (80, y_offset, 16, 16)
+        ])
+        
+        # Fantasma para baixo (2 frames)
+        down = self.load_sprite_set(f'ghost_{color}_down', [
+            (96, y_offset, 16, 16),
+            (112, y_offset, 16, 16)
+        ])
+        
         # Fantasma vulnerável (azul)
         vulnerable = self.load_sprite_set('ghost_vulnerable', [
             (0, 128, 16, 16),
@@ -199,6 +211,8 @@ class SpriteManager:
         return {
             'right': right,
             'left': left,
+            'up': up,
+            'down': down,
             'vulnerable': vulnerable,
             'flashing': flashing,
             'eyes': eyes

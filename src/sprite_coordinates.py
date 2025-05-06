@@ -6,7 +6,8 @@ misc_sprites = {
     'pac aberto cima': (23, 47, 13, 9),
     'pac baixo': (3, 63, 13, 12),
     'pac aberto baixo': (23, 62, 13, 9),
-    'pac eq': (4, 3, 12, 13),
+    'red cima 1': (3, 83, 14, 14),
+    'red cima 2': (23, 83, 14, 14),
 }
 
 # Lista completa de todas as coordenadas
@@ -16,5 +17,6 @@ all_sprites = [
     (23, 47, 13, 9),  # pac aberto cima
     (3, 63, 13, 12),  # pac baixo
     (23, 62, 13, 9),  # pac aberto baixo
-    (4, 3, 12, 13),  # pac eq
+    (3, 83, 14, 14),  # red cima 1
+    (23, 83, 14, 14),  # red cima 2
 ]
