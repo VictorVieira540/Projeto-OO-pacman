@@ -108,30 +108,30 @@ class SpriteManager:
         
         # Pacman direita (3 frames: boca aberta, meio aberta, fechada)
         right = self.load_sprite_set('pacman_right', [
-            (0, 0, 16, 16),    # Exemplo: boca aberta
-            (16, 0, 16, 16),   # Exemplo: boca meio aberta
-            (32, 0, 16, 16)    # Exemplo: boca fechada
+            (23, 23, 9, 13),    # Exemplo: boca aberta
+            (3, 23, 12, 13),   # Exemplo: boca meio aberta
+            (43, 3, 13, 13)    # Exemplo: boca fechada
         ])
         
         # Pacman esquerda
         left = self.load_sprite_set('pacman_left', [
-            (0, 16, 16, 16),   # Exemplo: boca aberta 
+            (27, 3, 9, 13),   # Exemplo: boca aberta 
             (16, 16, 16, 16),  # Exemplo: boca meio aberta
-            (32, 16, 16, 16)   # Exemplo: boca fechada
+            (43, 3, 13, 13)   # Exemplo: boca fechada
         ])
         
         # Pacman cima
         up = self.load_sprite_set('pacman_up', [
             (0, 32, 16, 16),   # Exemplo: boca aberta
             (16, 32, 16, 16),  # Exemplo: boca meio aberta 
-            (32, 32, 16, 16)   # Exemplo: boca fechada
+            (43, 3, 13, 13)   # Exemplo: boca fechada
         ])
         
         # Pacman baixo
         down = self.load_sprite_set('pacman_down', [
             (0, 48, 16, 16),   # Exemplo: boca aberta
             (16, 48, 16, 16),  # Exemplo: boca meio aberta
-            (32, 48, 16, 16)   # Exemplo: boca fechada
+            (43, 3, 13, 13)   # Exemplo: boca fechada
         ])
         
         return {

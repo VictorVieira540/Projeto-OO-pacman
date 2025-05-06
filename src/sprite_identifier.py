@@ -42,7 +42,7 @@ selection_end = None
 selections = []  # Lista para guardar seleções anteriores
 current_name = ""  # Nome do sprite atual
 show_grid = True
-grid_size = 8  # Tamanho da grade em pixels
+grid_size =  1 # Tamanho da grade em pixels
 
 # Fontes
 font = pygame.font.SysFont('Arial', 16)

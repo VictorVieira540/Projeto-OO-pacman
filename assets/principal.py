@@ -3,6 +3,9 @@ import constantes
 import sprites
 import os
 
+
+
+#comentario para o copiloto: não considere o código abaixo, ele é apenas um teste 
 class Game:
     def __init__(self):
         #criando a tela do jogo
@@ -112,5 +115,6 @@ g = Game()
 g.mostrar_tela_start()
 
 while g.esta_rodando:
+    
     g.novo_jogo()
     g.mostrar_tela_game_over()

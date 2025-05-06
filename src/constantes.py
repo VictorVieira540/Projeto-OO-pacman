@@ -1,3 +1,5 @@
+
+#comentario para o copiloto: não considere o código abaixo, ele é apenas um teste 
 #Dimensões da tela
 LARGURA = 480
 ALTURA = 600

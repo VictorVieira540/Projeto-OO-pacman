@@ -128,3 +128,11 @@ Se os sprites não aparecem corretamente:
 3. **Sprites não carregados:**
    - Verifique o caminho correto para a spritesheet
    - Confirme que os métodos no `sprite_manager.py` estão corretos
+   
+## Contato para Suporte
+
+Se você tiver problemas que não consegue resolver, entre em contato com o desenvolvedor responsável pela implementação do spritesheet.
+
+---
+
+Boa sorte com o ajuste dos sprites! Esta é uma etapa fundamental para termos um jogo Pac-Man com aparência profissional e autêntica.
