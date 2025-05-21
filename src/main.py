@@ -3,6 +3,7 @@ import sys
 import os
 import constantes
 from sprite_manager import SpriteManager
+from game import Game
 
 class Menu:
     def __init__(self):
@@ -283,7 +284,35 @@ class Menu:
             # Atualizar a tela
             pygame.display.flip()
 
+def main():
+    # Inicializa o Pygame
+    pygame.init()
+    pygame.mixer.init()
+    
+    # Cria a janela do jogo
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Pacman POO")
+    
+    # Cria a instância do jogo
+    game = Game(screen)
+    
+    # Loop principal do jogo
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        
+        # Atualiza e desenha o jogo
+        game.update()
+        game.draw()
+        
+        # Atualiza a tela
+        pygame.display.flip()
+        
+        # Controla o FPS
+        pygame.time.Clock().tick(60)
+
 # Iniciar o menu quando o script for executado diretamente
 if __name__ == "__main__":
-    menu = Menu()
-    menu.executar_menu()
+    main()

@@ -9,18 +9,58 @@ class SpriteManager:
     sprites individuais baseados em coordenadas e dimensões específicas.
     """
     
-    def __init__(self, game_directory):
-        """
-        Inicializa o gerenciador de sprites.
-        
-        Args:
-            game_directory (str): Diretório base do jogo para localizar os assets
-        """
-        self.game_directory = game_directory
+    def __init__(self) -> None:
         self.sprites = {}
-        self.spritesheet = None
-        self.load_spritesheet()
+        self.load_sprites()
+    
+    def load_sprites(self) -> None:
+        """Carrega todos os sprites do jogo"""
+        # Carrega o spritesheet
+        spritesheet = pygame.image.load("assets/sprites/spritesheet.png")
         
+        # Define as dimensões dos sprites
+        sprite_size = 16
+        
+        # Extrai os sprites do Pacman
+        self.sprites["pacman"] = {
+            "right": [spritesheet.subsurface((0, 0, sprite_size, sprite_size)),
+                     spritesheet.subsurface((sprite_size, 0, sprite_size, sprite_size))],
+            "left": [spritesheet.subsurface((0, sprite_size, sprite_size, sprite_size)),
+                    spritesheet.subsurface((sprite_size, sprite_size, sprite_size, sprite_size))],
+            "up": [spritesheet.subsurface((0, sprite_size * 2, sprite_size, sprite_size)),
+                  spritesheet.subsurface((sprite_size, sprite_size * 2, sprite_size, sprite_size))],
+            "down": [spritesheet.subsurface((0, sprite_size * 3, sprite_size, sprite_size)),
+                    spritesheet.subsurface((sprite_size, sprite_size * 3, sprite_size, sprite_size))]
+        }
+        
+        # Extrai os sprites dos fantasmas
+        ghost_colors = ["red", "pink", "blue", "orange"]
+        for i, color in enumerate(ghost_colors):
+            self.sprites[f"ghost_{color}"] = {
+                "right": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, 0, sprite_size, sprite_size))],
+                "left": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, sprite_size, sprite_size, sprite_size))],
+                "up": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, sprite_size * 2, sprite_size, sprite_size))],
+                "down": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, sprite_size * 3, sprite_size, sprite_size))]
+            }
+        
+        # Extrai os sprites da comida
+        self.sprites["food"] = {
+            "normal": spritesheet.subsurface((sprite_size * 6, 0, sprite_size // 2, sprite_size // 2)),
+            "power": spritesheet.subsurface((sprite_size * 6, sprite_size // 2, sprite_size, sprite_size))
+        }
+    
+    def get_sprite(self, entity: str, direction: str = None, frame: int = 0) -> pygame.Surface:
+        """Retorna um sprite específico"""
+        if entity == "food":
+            return self.sprites[entity][direction]  # direction aqui é o tipo da comida (normal/power)
+        elif direction:
+            return self.sprites[entity][direction][frame]
+        return self.sprites[entity]
+    
+    def scale_sprite(self, sprite: pygame.Surface, scale: float) -> pygame.Surface:
+        """Redimensiona um sprite"""
+        return pygame.transform.scale(sprite, (int(sprite.get_width() * scale), int(sprite.get_height() * scale)))
+    
     def load_spritesheet(self):
         """Carrega a imagem da spritesheet principal."""
         spritesheet_path = os.path.join(self.game_directory, 'assets', 'sprites', 'spritesheet.png')
@@ -30,30 +70,6 @@ class SpriteManager:
         except pygame.error as e:
             print(f"Erro ao carregar spritesheet: {e}")
             self.spritesheet = None
-    
-    def get_sprite(self, x, y, width, height):
-        """
-        Extrai um sprite específico da spritesheet.
-        
-        Args:
-            x (int): Coordenada X inicial do sprite na spritesheet
-            y (int): Coordenada Y inicial do sprite na spritesheet
-            width (int): Largura do sprite
-            height (int): Altura do sprite
-            
-        Returns:
-            pygame.Surface: Imagem do sprite recortado
-        """
-        if self.spritesheet is None:
-            return None
-            
-        # Cria uma nova superfície com transparência
-        sprite = pygame.Surface((width, height), pygame.SRCALPHA)
-        
-        # Copia a região específica da spritesheet
-        sprite.blit(self.spritesheet, (0, 0), (x, y, width, height))
-        
-        return sprite
     
     def load_sprite_set(self, name, coordinates):
         """
@@ -76,24 +92,6 @@ class SpriteManager:
         # Armazena o conjunto para uso posterior
         self.sprites[name] = sprite_set
         return sprite_set
-    
-    def scale_sprite(self, sprite, scale_factor):
-        """
-        Redimensiona um sprite por um fator de escala.
-        
-        Args:
-            sprite (pygame.Surface): Sprite a ser redimensionado
-            scale_factor (float): Fator de escala (ex: 2.0 para dobrar o tamanho)
-            
-        Returns:
-            pygame.Surface: Sprite redimensionado
-        """
-        if sprite is None:
-            return None
-            
-        width = int(sprite.get_width() * scale_factor)
-        height = int(sprite.get_height() * scale_factor)
-        return pygame.transform.scale(sprite, (width, height))
     
     def get_pacman_sprites(self):
         """
