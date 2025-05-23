@@ -18,35 +18,61 @@ class SpriteManager:
         # Carrega o spritesheet
         spritesheet = pygame.image.load("assets/sprites/spritesheet.png")
         
-        # Define as dimensões dos sprites
-        sprite_size = 16
-        
-        # Extrai os sprites do Pacman
+        # Pac-Man (3 frames por direção, 16x16 cada)
         self.sprites["pacman"] = {
-            "right": [spritesheet.subsurface((0, 0, sprite_size, sprite_size)),
-                     spritesheet.subsurface((sprite_size, 0, sprite_size, sprite_size))],
-            "left": [spritesheet.subsurface((0, sprite_size, sprite_size, sprite_size)),
-                    spritesheet.subsurface((sprite_size, sprite_size, sprite_size, sprite_size))],
-            "up": [spritesheet.subsurface((0, sprite_size * 2, sprite_size, sprite_size)),
-                  spritesheet.subsurface((sprite_size, sprite_size * 2, sprite_size, sprite_size))],
-            "down": [spritesheet.subsurface((0, sprite_size * 3, sprite_size, sprite_size)),
-                    spritesheet.subsurface((sprite_size, sprite_size * 3, sprite_size, sprite_size))]
+            "right": [
+                spritesheet.subsurface((0, 0, 16, 16)),   # boca fechada
+                spritesheet.subsurface((16, 0, 16, 16)),  # meio aberta
+                spritesheet.subsurface((32, 0, 16, 16)),  # aberta
+            ],
+            "up": [
+                spritesheet.subsurface((0, 16, 16, 16)),
+                spritesheet.subsurface((16, 16, 16, 16)),
+                spritesheet.subsurface((32, 16, 16, 16)),
+            ],
+            "left": [
+                spritesheet.subsurface((0, 32, 16, 16)),
+                spritesheet.subsurface((16, 32, 16, 16)),
+                spritesheet.subsurface((32, 32, 16, 16)),
+            ],
+            "down": [
+                spritesheet.subsurface((0, 48, 16, 16)),
+                spritesheet.subsurface((16, 48, 16, 16)),
+                spritesheet.subsurface((32, 48, 16, 16)),
+            ],
         }
         
-        # Extrai os sprites dos fantasmas
+        # Fantasmas (2 frames por cor, 16x16 cada)
         ghost_colors = ["red", "pink", "blue", "orange"]
+        ghost_y = 64
         for i, color in enumerate(ghost_colors):
+            right_frames = [spritesheet.subsurface((i*32, ghost_y, 16, 16)), spritesheet.subsurface((i*32+16, ghost_y, 16, 16))]
+            left_frames = [spritesheet.subsurface((i*32, ghost_y+16, 16, 16)), spritesheet.subsurface((i*32+16, ghost_y+16, 16, 16))]
             self.sprites[f"ghost_{color}"] = {
-                "right": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, 0, sprite_size, sprite_size))],
-                "left": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, sprite_size, sprite_size, sprite_size))],
-                "up": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, sprite_size * 2, sprite_size, sprite_size))],
-                "down": [spritesheet.subsurface((sprite_size * 2 + i * sprite_size, sprite_size * 3, sprite_size, sprite_size))]
+                "right": right_frames,
+                "left": left_frames,
+                "up": right_frames,   # Usando os mesmos frames de 'right' para 'up'
+                "down": left_frames   # Usando os mesmos frames de 'left' para 'down'
             }
         
-        # Extrai os sprites da comida
+        # Fantasma vulnerável (azul)
+        self.sprites["ghost_vulnerable"] = [
+            spritesheet.subsurface((0, 80, 16, 16)),
+            spritesheet.subsurface((16, 80, 16, 16)),
+        ]
+        # Olhos dos fantasmas
+        self.sprites["ghost_eyes"] = [
+            spritesheet.subsurface((32, 80, 16, 16)),
+            spritesheet.subsurface((48, 80, 16, 16)),
+        ]
+        
+        # Frutas (exemplo: cereja)
+        self.sprites["fruit"] = [spritesheet.subsurface((0, 96, 16, 16))]
+        
+        # Pellets
         self.sprites["food"] = {
-            "normal": spritesheet.subsurface((sprite_size * 6, 0, sprite_size // 2, sprite_size // 2)),
-            "power": spritesheet.subsurface((sprite_size * 6, sprite_size // 2, sprite_size, sprite_size))
+            "normal": spritesheet.subsurface((0, 112, 8, 8)),
+            "power": spritesheet.subsurface((8, 112, 8, 8)),
         }
     
     def get_sprite(self, entity: str, direction: str = None, frame: int = 0) -> pygame.Surface:

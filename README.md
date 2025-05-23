@@ -1,3 +1,96 @@
+# Pacman POO
+
+Um jogo do Pacman desenvolvido em Python usando programação orientada a objetos.
+
+## Requisitos
+
+- Python 3.8 ou superior
+- Pygame 2.5.2
+
+## Instalação
+
+1. Clone este repositório:
+```bash
+git clone https://github.com/seu-usuario/pacman-poo.git
+cd pacman-poo
+```
+
+2. Crie um ambiente virtual (opcional, mas recomendado):
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+```
+
+3. Instale as dependências:
+```bash
+pip install -r requirements.txt
+```
+
+## Executando o jogo
+
+```bash
+python src/main.py
+```
+
+## Controles
+
+- Setas direcionais: Movimentar o Pacman
+- ENTER: Selecionar opção no menu
+- ESPAÇO: Voltar ao menu principal
+- ESC: Sair do jogo
+
+## Funcionalidades
+
+- Menu inicial com música de fundo
+- Sistema de pontuação
+- Recordes
+- Configurações de volume
+- Fantasmas com comportamentos diferentes
+- Labirinto com paredes e comida
+- Sistema de vidas
+- Game over
+
+## Estrutura do Projeto
+
+```
+pacman-poo/
+├── src/
+│   ├── main.py
+│   ├── game.py
+│   ├── player.py
+│   ├── ghost.py
+│   ├── maze.py
+│   ├── score.py
+│   └── menu.py
+├── assets/
+│   ├── sprites/
+│   └── sounds/
+├── requirements.txt
+└── README.md
+```
+
+## Desenvolvimento
+
+Este projeto foi desenvolvido como um trabalho de Programação Orientada a Objetos, utilizando os seguintes conceitos:
+
+- Classes e Objetos
+- Herança
+- Encapsulamento
+- Polimorfismo
+- Tratamento de Exceções
+- Sobrecarga de Operadores
+- Tipagem Estática
+- Documentação de Código
+
+## Contribuição
+
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
+
+## Licença
+
+Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para mais detalhes.
+
 # Roteiro de Desenvolvimento: Versão do Pac-Man em Python (Orientado a Objetos)
 
 ## 1. Definição de Requisitos
@@ -90,7 +183,7 @@
 
 6. Colisões Pac-Man × Fantasma
    - Fantasma normal: Pac-Man perde vida e ambos resetam
-   - Fantasma vulnerável: fantasma “morre” e volta ao spawn
+   - Fantasma vulnerável: fantasma "morre" e volta ao spawn
 
 7. Estados de jogo e HUD
    - Telas: menu inicial, instruções, jogo em andamento, game over e vitória

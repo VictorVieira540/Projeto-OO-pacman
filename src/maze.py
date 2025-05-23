@@ -2,6 +2,8 @@ import pygame
 from typing import List, Tuple
 from sprite_manager import SpriteManager
 import random
+from PIL import Image
+
 
 class Maze:
     def __init__(self) -> None:
@@ -15,51 +17,33 @@ class Maze:
     
     def create_maze(self) -> None:
         """Cria o labirinto e a comida"""
-        # Cria as paredes do labirinto
-        # Paredes horizontais
-        for x in range(0, 800, self.wall_size):
-            self.walls.append(pygame.Rect(x, 0, self.wall_size, self.wall_size))
-            self.walls.append(pygame.Rect(x, 560, self.wall_size, self.wall_size))
-        
-        # Paredes verticais
-        for y in range(0, 600, self.wall_size):
-            self.walls.append(pygame.Rect(0, y, self.wall_size, self.wall_size))
-            self.walls.append(pygame.Rect(760, y, self.wall_size, self.wall_size))
-        
-        # Paredes internas
-        self.walls.extend([
-            pygame.Rect(200, 200, self.wall_size, self.wall_size),
-            pygame.Rect(240, 200, self.wall_size, self.wall_size),
-            pygame.Rect(280, 200, self.wall_size, self.wall_size),
-            pygame.Rect(320, 200, self.wall_size, self.wall_size),
-            pygame.Rect(360, 200, self.wall_size, self.wall_size),
-            pygame.Rect(400, 200, self.wall_size, self.wall_size),
-            pygame.Rect(440, 200, self.wall_size, self.wall_size),
-            pygame.Rect(480, 200, self.wall_size, self.wall_size),
-            pygame.Rect(520, 200, self.wall_size, self.wall_size),
-            pygame.Rect(560, 200, self.wall_size, self.wall_size),
-            
-            pygame.Rect(200, 400, self.wall_size, self.wall_size),
-            pygame.Rect(240, 400, self.wall_size, self.wall_size),
-            pygame.Rect(280, 400, self.wall_size, self.wall_size),
-            pygame.Rect(320, 400, self.wall_size, self.wall_size),
-            pygame.Rect(360, 400, self.wall_size, self.wall_size),
-            pygame.Rect(400, 400, self.wall_size, self.wall_size),
-            pygame.Rect(440, 400, self.wall_size, self.wall_size),
-            pygame.Rect(480, 400, self.wall_size, self.wall_size),
-            pygame.Rect(520, 400, self.wall_size, self.wall_size),
-            pygame.Rect(560, 400, self.wall_size, self.wall_size),
-        ])
-        
-        # Cria a comida
-        for x in range(50, 750, 50):
-            for y in range(50, 550, 50):
-                # Verifica se a posição não está ocupada por uma parede
-                food_rect = pygame.Rect(x, y, self.food_size, self.food_size)
-                if not any(food_rect.colliderect(wall) for wall in self.walls):
-                    # 10% de chance de ser uma comida especial
-                    food_type = "power" if random.random() < 0.1 else "normal"
-                    self.food.append((food_rect, food_type))
+        # Carregue a imagem do labirinto
+        img = Image.open('assets/mazes/001.png').convert('RGB')
+        largura, altura = img.size
+
+        # Defina as cores de referência (ajuste conforme necessário)
+        cor_parede = (0, 255, 0)   # azul claro (parede)
+        cor_caminho = (0, 0, 0)      # preto (caminho)
+        cor_especial = (0, 255, 0)   # verde (área especial)
+
+        # Inicialize a matriz do mapa
+        mapa = []
+
+        for y in range(altura):
+            linha = []
+            for x in range(largura):
+                pixel = img.getpixel((x, y))
+                if pixel == cor_parede:
+                    linha.append(1)
+                elif pixel == cor_especial:
+                    linha.append(2)
+                else:
+                    linha.append(0)
+            mapa.append(linha)
+
+        # Exemplo: imprimir parte do mapa
+        for linha in mapa[:10]:
+            print(linha[:20])
     
     def draw(self, screen: pygame.Surface) -> None:
         """Desenha o labirinto e a comida"""
