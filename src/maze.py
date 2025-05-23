@@ -1,8 +1,18 @@
 import pygame
 from typing import List, Tuple
 from sprite_manager import SpriteManager
-import random
-from PIL import Image
+import json
+import os
+from enum import Enum
+
+
+class MapElement(Enum):
+    CAMINHO = 0
+    PAREDE = 1
+    POWER_PELLET = 2
+    PACMAN_SPAWN = 3
+    GHOST_HOUSE = 4
+    PELLET = 5
 
 
 class Maze:
@@ -17,33 +27,36 @@ class Maze:
     
     def create_maze(self) -> None:
         """Cria o labirinto e a comida"""
-        # Carregue a imagem do labirinto
-        img = Image.open('assets/mazes/001.png').convert('RGB')
-        largura, altura = img.size
-
-        # Defina as cores de referência (ajuste conforme necessário)
-        cor_parede = (0, 255, 0)   # azul claro (parede)
-        cor_caminho = (0, 0, 0)      # preto (caminho)
-        cor_especial = (0, 255, 0)   # verde (área especial)
-
-        # Inicialize a matriz do mapa
-        mapa = []
-
-        for y in range(altura):
-            linha = []
-            for x in range(largura):
-                pixel = img.getpixel((x, y))
-                if pixel == cor_parede:
-                    linha.append(1)
-                elif pixel == cor_especial:
-                    linha.append(2)
-                else:
-                    linha.append(0)
-            mapa.append(linha)
-
-        # Exemplo: imprimir parte do mapa
-        for linha in mapa[:10]:
-            print(linha[:20])
+        # Carrega o arquivo do mapa
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        map_path = os.path.join(base_dir, 'assets/mazes/map_data.json')
+        
+        try:
+            with open(map_path, 'r') as f:
+                data = json.load(f)
+                mapa = data['map']
+        except FileNotFoundError:
+            print(f"Arquivo de mapa não encontrado em: {map_path}")
+            return
+        
+        # Cria as paredes e comidas baseado no mapa
+        for y in range(len(mapa)):
+            for x in range(len(mapa[0])):
+                elemento = mapa[y][x]
+                pos_x = x * self.wall_size
+                pos_y = y * self.wall_size
+                
+                if elemento == MapElement.PAREDE.value:
+                    # Cria parede
+                    wall = pygame.Rect(pos_x, pos_y, self.wall_size, self.wall_size)
+                    self.walls.append(wall)
+                elif elemento in [MapElement.POWER_PELLET.value, MapElement.PELLET.value]:
+                    # Cria comida
+                    food_x = pos_x + (self.wall_size - self.food_size) // 2
+                    food_y = pos_y + (self.wall_size - self.food_size) // 2
+                    food_rect = pygame.Rect(food_x, food_y, self.food_size, self.food_size)
+                    food_type = "special" if elemento == MapElement.POWER_PELLET.value else "normal"
+                    self.food.append((food_rect, food_type))
     
     def draw(self, screen: pygame.Surface) -> None:
         """Desenha o labirinto e a comida"""
