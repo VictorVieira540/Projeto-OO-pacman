@@ -137,6 +137,10 @@ requirements.txt        # Dependências
 - Sistema de spawn ajustado
 - Desenho híbrido (sprites + procedural)
 
+## Diagrama UML
+
+![Diagrama UML](Uml.png)
+
 ## Melhorias Técnicas
 
 ### 🚀 **Performance:**
