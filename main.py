@@ -37,7 +37,7 @@ class Game:
             y=player_pos.y, 
             color=(255, 255, 0), 
             size=sprite_manager.sprite_size,  # Usa tamanho do sprite
-            speed=4,  # Aumentado de 2 para 4
+            speed=2,  # Aumentado de 2 para 4
             lives=3
         )
         
@@ -57,7 +57,7 @@ class Game:
                 y=ghost_pos.y,
                 color=config["color"],
                 size=sprite_manager.sprite_size,  # Usa tamanho do sprite
-                speed=1,
+                speed=1.5,  # Velocidade reduzida para 1.5 (era 2)
                 initial_position=ghost_pos,
                 ghost_type=config["type"]
             )

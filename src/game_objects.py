@@ -207,7 +207,10 @@ class Ghost(MovableObject):
         self._vulnerable_timer = 0
         self._target_position = Vector2D(0, 0)
         self._mode_timer = 0
-        self._current_mode = "scatter"  # scatter, chase
+        # Modo atual do fantasma:
+        # - scatter: fantasma foge para os cantos do mapa
+        # - chase: fantasma persegue o jogador com comportamento específico
+        self._current_mode = "scatter"
         self._path_finding_timer = 0
         self._original_color = color
 
@@ -223,17 +226,17 @@ class Ghost(MovableObject):
         """Torna o fantasma vulnerável por um tempo determinado"""
         self._state = "vulnerable"
         self._vulnerable_timer = duration
-        self._speed = max(1, self._speed - 1)  # Reduz velocidade quando vulnerável
+        self._speed = max(1, self._speed - 1)  # Reduz velocidade quando vulnerável, mas mantém um mínimo de 1
 
     def get_target_position(self, player_position, other_ghosts=None):
         """Calcula a posição alvo baseada no tipo de fantasma e modo atual"""
         if self._current_mode == "scatter":
             # Modo scatter: vai para cantos específicos
             scatter_targets = {
-                "red": Vector2D(500, 50),
-                "pink": Vector2D(50, 50),
-                "cyan": Vector2D(500, 450),
-                "orange": Vector2D(50, 450)
+                "red": Vector2D(500, 50),      # Canto superior direito
+                "pink": Vector2D(50, 50),       # Canto superior esquerdo
+                "cyan": Vector2D(500, 450),     # Canto inferior direito
+                "orange": Vector2D(50, 450)     # Canto inferior esquerdo
             }
             return scatter_targets.get(self._ghost_type, self._initial_position)
         
@@ -242,20 +245,33 @@ class Ghost(MovableObject):
             if self._ghost_type == "red":
                 # Fantasma vermelho: persegue diretamente
                 return player_position.copy()
+                
             elif self._ghost_type == "pink":
                 # Fantasma rosa: mira 4 células à frente do jogador
-                # TODO: Implementar lógica mais sofisticada baseada na direção do jogador
+                # TODO: Implementar lógica baseada na direção do jogador
                 return player_position.copy()
+                
             elif self._ghost_type == "cyan":
                 # Fantasma ciano: comportamento mais complexo
+                # Usa a posição do jogador e do fantasma vermelho
+                if other_ghosts:
+                    red_ghost = next((g for g in other_ghosts if g._ghost_type == "red"), None)
+                    if red_ghost:
+                        # Calcula ponto intermediário entre jogador e fantasma vermelho
+                        mid_point = Vector2D(
+                            (player_position.x + red_ghost.position.x) / 2,
+                            (player_position.y + red_ghost.position.y) / 2
+                        )
+                        return mid_point
                 return player_position.copy()
-            else:
+                
+            else:  # orange
                 # Fantasma laranja: alterna entre perseguir e fugir
                 distance = self._position.distance_to(player_position)
-                if distance > 100:
+                if distance > 100:  # Se estiver longe, persegue
                     return player_position.copy()
-                else:
-                    return self._initial_position.copy()
+                else:  # Se estiver perto, foge para o canto
+                    return Vector2D(50, 450)  # Canto inferior esquerdo
 
         return self._initial_position.copy()
 
@@ -296,7 +312,7 @@ class Ghost(MovableObject):
     def reset_position(self):
         self._position = self._initial_position.copy()
         self._state = "normal"
-        self._speed = 4  # Velocidade padrão
+        self._speed = 1.5  # Velocidade padrão (ajustada para combinar com a inicialização)
         self._vulnerable_timer = 0
 
     def draw(self, screen):
