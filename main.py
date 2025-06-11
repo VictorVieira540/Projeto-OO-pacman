@@ -11,7 +11,7 @@ class Game:
         self._width = width
         self._height = height
         self._screen = pygame.display.set_mode((self._width, self._height))
-        pygame.display.set_caption("Pac-Man OO - Projeto Orientado a Objetos com Sprites")
+        pygame.display.set_caption("Pac-Man OO - Projeto Orientado a Objetos")
         self._clock = pygame.time.Clock()
         self._state = GameState.MENU
         self._font_large = pygame.font.Font(None, 48)
