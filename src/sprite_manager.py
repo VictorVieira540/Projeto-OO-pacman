@@ -1,255 +1,179 @@
 import pygame
 import os
+from .utils import Direction
 
 class SpriteManager:
-    """
-    Classe responsável por gerenciar os sprites do jogo.
+    """Gerenciador de sprites para o jogo Pac-Man"""
     
-    Esta classe carrega a spritesheet principal e fornece métodos para extrair
-    sprites individuais baseados em coordenadas e dimensões específicas.
-    """
+    def __init__(self):
+        self._sprites = {}
+        self._sprite_size = 16
+        self._load_all_sprites()
     
-    def __init__(self, game_directory):
-        """
-        Inicializa o gerenciador de sprites.
-        
-        Args:
-            game_directory (str): Diretório base do jogo para localizar os assets
-        """
-        self.game_directory = game_directory
-        self.sprites = {}
-        self.spritesheet = None
-        self.load_spritesheet()
-        
-    def load_spritesheet(self):
-        """Carrega a imagem da spritesheet principal."""
-        spritesheet_path = os.path.join(self.game_directory, 'assets', 'sprites', 'spritesheet.png')
+    def _load_sprite(self, path):
+        """Carrega um sprite individual"""
         try:
-            self.spritesheet = pygame.image.load(spritesheet_path).convert_alpha()
-            print(f"Spritesheet carregada com sucesso: {spritesheet_path}")
-        except pygame.error as e:
-            print(f"Erro ao carregar spritesheet: {e}")
-            self.spritesheet = None
+            if not os.path.exists(path):
+                print(f"Aviso: Sprite não encontrado em {path}")
+                return self._create_default_sprite()
+                
+            sprite = pygame.image.load(path)
+            # Redimensiona para o tamanho correto se necessário
+            if sprite.get_size() != (self._sprite_size, self._sprite_size):
+                sprite = pygame.transform.scale(sprite, (self._sprite_size, self._sprite_size))
+            return sprite
+        except (pygame.error, FileNotFoundError) as e:
+            print(f"Erro ao carregar sprite {path}: {e}")
+            return self._create_default_sprite()
     
-    def get_sprite(self, x, y, width, height):
-        """
-        Extrai um sprite específico da spritesheet.
-        
-        Args:
-            x (int): Coordenada X inicial do sprite na spritesheet
-            y (int): Coordenada Y inicial do sprite na spritesheet
-            width (int): Largura do sprite
-            height (int): Altura do sprite
-            
-        Returns:
-            pygame.Surface: Imagem do sprite recortado
-        """
-        if self.spritesheet is None:
-            return None
-            
-        # Cria uma nova superfície com transparência
-        sprite = pygame.Surface((width, height), pygame.SRCALPHA)
-        
-        # Copia a região específica da spritesheet
-        sprite.blit(self.spritesheet, (0, 0), (x, y, width, height))
-        
+    def _create_default_sprite(self):
+        """Cria um sprite padrão quando o original não é encontrado"""
+        sprite = pygame.Surface((self._sprite_size, self._sprite_size))
+        sprite.fill((255, 0, 255))  # Magenta para indicar sprite faltando
         return sprite
     
-    def load_sprite_set(self, name, coordinates):
-        """
-        Carrega um conjunto de sprites e armazena com um nome específico.
+    def _load_all_sprites(self):
+        """Carrega todos os sprites do jogo"""
+        # Usa a pasta organized que tem todos os sprites
+        assets_path = "assets/sprites/organized"
         
-        Args:
-            name (str): Nome do conjunto de sprites (ex: 'pacman_right', 'ghost_blue')
-            coordinates (list): Lista de tuplas (x, y, width, height) para cada sprite
+        # Sprites do Pac-Man
+        pacman_path = f"{assets_path}/pacman"
+        self._sprites['pacman'] = {
+            'closed': self._load_sprite(f"{pacman_path}/pac-fechado.png"),
+            'right': self._load_sprite(f"{pacman_path}/pac-dir.png"),
+            'right_open': self._load_sprite(f"{pacman_path}/pac-dir-ab.png"),
+            'left': self._load_sprite(f"{pacman_path}/pac-esq.png"),
+            'left_open': self._load_sprite(f"{pacman_path}/pac-esq-ab.png"),
+            'up': self._load_sprite(f"{pacman_path}/pac-cima.png"),
+            'up_open': self._load_sprite(f"{pacman_path}/pac-cima-ab.png"),
+            'down': self._load_sprite(f"{pacman_path}/pac-baixo.png"),
+            'down_closed': self._load_sprite(f"{pacman_path}/pac-baixo-fechado.png")
+        }
+        
+        # Sprites dos fantasmas
+        ghost_colors = ['red', 'pink', 'blue', 'yellow']
+        
+        for color in ghost_colors:
+            ghost_path = f"{assets_path}/ghosts/{color}"
+            self._sprites[f'ghost_{color}'] = {}
             
-        Returns:
-            list: Lista de sprites recortados
-        """
-        sprite_set = []
-        for coord in coordinates:
-            x, y, width, height = coord
-            sprite = self.get_sprite(x, y, width, height)
-            if sprite:
-                sprite_set.append(sprite)
-                
-        # Armazena o conjunto para uso posterior
-        self.sprites[name] = sprite_set
-        return sprite_set
-    
-    def scale_sprite(self, sprite, scale_factor):
-        """
-        Redimensiona um sprite por um fator de escala.
+            # Carrega todos os sprites de direção para cada fantasma
+            for direction in ['up', 'down', 'left', 'right']:
+                for frame in ['1', '2']:
+                    direction_map = {
+                        'up': 'cima',
+                        'down': 'baixo', 
+                        'left': 'esq',
+                        'right': 'dir'
+                    }
+                    
+                    sprite_file = f"{ghost_path}/{color}-{direction_map[direction]}-{frame}.png"
+                    self._sprites[f'ghost_{color}'][f'{direction}_{frame}'] = self._load_sprite(sprite_file)
         
-        Args:
-            sprite (pygame.Surface): Sprite a ser redimensionado
-            scale_factor (float): Fator de escala (ex: 2.0 para dobrar o tamanho)
-            
-        Returns:
-            pygame.Surface: Sprite redimensionado
-        """
-        if sprite is None:
-            return None
-            
-        width = int(sprite.get_width() * scale_factor)
-        height = int(sprite.get_height() * scale_factor)
-        return pygame.transform.scale(sprite, (width, height))
-    
-    def get_pacman_sprites(self):
-        """
-        Exemplo de método para carregar os sprites do Pac-Man.
-        Você precisará ajustar as coordenadas com base na sua spritesheet específica.
-        
-        Returns:
-            dict: Dicionário com os sprites do Pac-Man em diferentes direções
-        """
-        # Estas coordenadas são apenas exemplos - você precisa ajustá-las!
-        # Formato: (x, y, largura, altura)
-        
-        # Pacman direita (3 frames: boca aberta, meio aberta, fechada)
-        right = self.load_sprite_set('pacman_right', [
-            (23, 23, 9, 13),    # Exemplo: boca aberta
-            (3, 23, 12, 13),   # Exemplo: boca meio aberta
-            (43, 3, 13, 13)    # Exemplo: boca fechada
-        ])
-        
-        # Pacman esquerda
-        left = self.load_sprite_set('pacman_left', [
-            (27, 3, 9, 13),   # Exemplo: boca aberta 
-            (4, 3, 12, 13),  # Exemplo: boca meio aberta
-            (43, 3, 13, 13)   # Exemplo: boca fechada
-        ])
-        
-        # Pacman cima
-        up = self.load_sprite_set('pacman_up', [
-           (23, 47, 13, 9),   # Exemplo: boca aberta
-            (3, 44, 13, 12),  # Exemplo: boca meio aberta 
-            (43, 3, 13, 13)   # Exemplo: boca fechada
-        ])
-        
-        # Pacman baixo
-        down = self.load_sprite_set('pacman_down', [
-           (23, 62, 13, 9),   # Exemplo: boca aberta
-            (3, 63, 13, 12),  # Exemplo: boca meio aberta
-            (43, 3, 13, 13)   # Exemplo: boca fechada
-        ])
-        
-        return {
-            'right': right,
-            'left': left,
-            'up': up,
-            'down': down
-        }
-    
-    def get_ghost_sprites(self, color):
-        """
-        Exemplo de método para carregar os sprites dos fantasmas.
-        
-        Args:
-            color (str): Cor do fantasma ('red', 'pink', 'blue', 'orange')
-            
-        Returns:
-            dict: Dicionário com os sprites do fantasma
-        """
-        # Estas coordenadas são apenas exemplos - você precisa ajustá-las!
-        # O ajuste depende da estrutura da sua spritesheet
-        
-        y_offset = 0
-        if color == 'red':
-            y_offset = 64
-        elif color == 'pink':
-            y_offset = 80
-        elif color == 'blue':
-            y_offset = 96
-        elif color == 'orange':
-            y_offset = 112
-        
-        # Fantasma direita (2 frames de animação)
-        right = self.load_sprite_set(f'ghost_{color}_right', [
-            (0, y_offset, 16, 16),
-            (16, y_offset, 16, 16)
-        ])
-        
-        # Fantasma esquerda (2 frames)
-        left = self.load_sprite_set(f'ghost_{color}_left', [
-            (32, y_offset, 16, 16),
-            (48, y_offset, 16, 16)
-        ])
-        
-        # Fantasma para cima (2 frames)
-        up = self.load_sprite_set(f'ghost_{color}_up', [
-            (64, y_offset, 16, 16),
-            (80, y_offset, 16, 16)
-        ])
-        
-        # Fantasma para baixo (2 frames)
-        down = self.load_sprite_set(f'ghost_{color}_down', [
-            (96, y_offset, 16, 16),
-            (112, y_offset, 16, 16)
-        ])
-        
-        # Fantasma vulnerável (azul)
-        vulnerable = self.load_sprite_set('ghost_vulnerable', [
-            (0, 128, 16, 16),
-            (16, 128, 16, 16)
-        ])
-        
-        # Fantasma vulnerável piscando (branco e azul)
-        flashing = self.load_sprite_set('ghost_flashing', [
-            (32, 128, 16, 16),
-            (48, 128, 16, 16)
-        ])
-        
-        # Olhos (quando o fantasma está voltando para casa)
-        eyes = {
-            'right': self.get_sprite(0, 144, 16, 16),
-            'left': self.get_sprite(16, 144, 16, 16),
-            'up': self.get_sprite(32, 144, 16, 16),
-            'down': self.get_sprite(48, 144, 16, 16)
+        # Sprites de fantasmas vulneráveis
+        vulnerable_path = f"{assets_path}/ghosts/vulnerable"
+        self._sprites['ghost_vulnerable'] = {
+            'blue_1': self._load_sprite(f"{vulnerable_path}/vulnerable-blue-1.png"),
+            'blue_2': self._load_sprite(f"{vulnerable_path}/vulnerable-blue-2.png"),
+            'white_1': self._load_sprite(f"{vulnerable_path}/vunerable-white-1.png"),
+            'white_2': self._load_sprite(f"{vulnerable_path}/vulnerable-white-2.png")
         }
         
-        return {
-            'right': right,
-            'left': left,
-            'up': up,
-            'down': down,
-            'vulnerable': vulnerable,
-            'flashing': flashing,
-            'eyes': eyes
+        # Sprites de pellets (criar proceduralmente)
+        self._sprites['pellet'] = {
+            'normal': self._create_pellet_sprite(2, (255, 255, 255)),
+            'power_up': self._create_power_up_sprite()
         }
+        
+        print(f"Sprites carregados: Pac-Man={len(self._sprites['pacman'])}, Fantasmas={len(ghost_colors)}")
     
-    def get_fruit_sprites(self):
-        """
-        Carrega os sprites das frutas.
-        
-        Returns:
-            dict: Dicionário com os sprites das frutas
-        """
-        # Estas coordenadas são apenas exemplos - você precisa ajustá-las!
-        fruits = {
-            'cherry': self.get_sprite(0, 160, 16, 16),
-            'strawberry': self.get_sprite(16, 160, 16, 16),
-            'orange': self.get_sprite(32, 160, 16, 16),
-            'apple': self.get_sprite(48, 160, 16, 16),
-            'melon': self.get_sprite(0, 176, 16, 16),
-            'galaxian': self.get_sprite(16, 176, 16, 16),
-            'bell': self.get_sprite(32, 176, 16, 16),
-            'key': self.get_sprite(48, 176, 16, 16)
-        }
-        
-        return fruits
+    def _create_pellet_sprite(self, radius, color):
+        """Cria sprite de pellet proceduralmente"""
+        sprite = pygame.Surface((self._sprite_size, self._sprite_size), pygame.SRCALPHA)
+        center = self._sprite_size // 2
+        pygame.draw.circle(sprite, color, (center, center), radius)
+        return sprite
     
-    def get_pellet_sprites(self):
-        """
-        Carrega os sprites dos pellets (bolinhas normais e energizantes).
+    def _create_power_up_sprite(self):
+        """Cria sprite de power-up proceduralmente"""
+        sprite = pygame.Surface((self._sprite_size, self._sprite_size), pygame.SRCALPHA)
+        # Power-up como quadrado maior
+        margin = 2
+        rect = pygame.Rect(margin, margin, self._sprite_size - 2*margin, self._sprite_size - 2*margin)
+        pygame.draw.rect(sprite, (255, 255, 255), rect)
+        return sprite
+    
+    def get_pacman_sprite(self, direction, animation_frame):
+        """Retorna sprite do Pac-Man baseado na direção e frame de animação"""
+        # Animação simples: alterna entre aberto e fechado
+        is_open = (animation_frame // 10) % 2 == 0
         
-        Returns:
-            dict: Dicionário com os sprites dos pellets
-        """
-        # Estas coordenadas são apenas exemplos - você precisa ajustá-las!
-        pellets = {
-            'small': self.get_sprite(0, 192, 8, 8),
-            'power': self.get_sprite(8, 192, 8, 8)
+        if direction == Direction.RIGHT:
+            return self._sprites['pacman']['right_open'] if is_open else self._sprites['pacman']['right']
+        elif direction == Direction.LEFT:
+            return self._sprites['pacman']['left_open'] if is_open else self._sprites['pacman']['left']
+        elif direction == Direction.UP:
+            return self._sprites['pacman']['up_open'] if is_open else self._sprites['pacman']['up']
+        elif direction == Direction.DOWN:
+            return self._sprites['pacman']['down_closed'] if not is_open else self._sprites['pacman']['down']
+        else:
+            return self._sprites['pacman']['closed']
+    
+    def get_ghost_sprite(self, ghost_type, direction, animation_frame, state="normal"):
+        """Retorna sprite do fantasma baseado no tipo, direção, frame e estado"""
+        if state == "vulnerable":
+            # Animação de vulnerabilidade alternando entre azul e branco
+            timer = animation_frame // 15
+            if timer % 4 < 2:
+                return self._sprites['ghost_vulnerable']['blue_1'] if timer % 2 == 0 else self._sprites['ghost_vulnerable']['blue_2']
+            else:
+                return self._sprites['ghost_vulnerable']['white_1'] if timer % 2 == 0 else self._sprites['ghost_vulnerable']['white_2']
+        
+        # Mapear types para cores corretas
+        color_map = {
+            "red": "red",
+            "pink": "pink", 
+            "cyan": "blue",  # Cyan usa sprites azuis
+            "orange": "yellow"  # Orange usa sprites amarelos
         }
         
-        return pellets
+        color = color_map.get(ghost_type, "red")
+        ghost_sprites = self._sprites.get(f'ghost_{color}', self._sprites['ghost_red'])
+        
+        # Escolhe direção
+        direction_map = {
+            Direction.UP: 'up',
+            Direction.DOWN: 'down',
+            Direction.LEFT: 'left',
+            Direction.RIGHT: 'right'
+        }
+        
+        dir_name = direction_map.get(direction, 'up')
+        
+        # Animação alternando entre frame 1 e 2
+        frame = '1' if (animation_frame // 20) % 2 == 0 else '2'
+        
+        sprite_key = f'{dir_name}_{frame}'
+        return ghost_sprites.get(sprite_key, ghost_sprites.get('up_1', self._sprites['ghost_red']['up_1']))
+    
+    def get_pellet_sprite(self, pellet_type, animation_frame=0):
+        """Retorna sprite do pellet"""
+        if pellet_type == "power_up":
+            # Power-up pisca
+            if (animation_frame // 15) % 2 == 0:
+                return self._sprites['pellet']['power_up']
+            else:
+                # Retorna sprite transparente para efeito de piscar
+                transparent = pygame.Surface((self._sprite_size, self._sprite_size), pygame.SRCALPHA)
+                return transparent
+        else:
+            return self._sprites['pellet']['normal']
+    
+    @property
+    def sprite_size(self):
+        """Retorna o tamanho dos sprites"""
+        return self._sprite_size
+
+# Instância global do gerenciador de sprites
+sprite_manager = SpriteManager() 
