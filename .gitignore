@@ -1,0 +1,27 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+venv/
+env/
+.env
+
+# Build and distribution
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
