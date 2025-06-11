@@ -1,0 +1,600 @@
+[
+  {
+    "name": "pac-esq",
+    "filename": "pac-esq.png",
+    "position": [
+      2,
+      1
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:48:03.193156"
+  },
+  {
+    "name": "pac-esq-ab",
+    "filename": "pac-esq-ab.png",
+    "position": [
+      23,
+      2
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:48:51.774313"
+  },
+  {
+    "name": "pac-fechado",
+    "filename": "pac-fechado.png",
+    "position": [
+      42,
+      1
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:49:27.672999"
+  },
+  {
+    "name": "pac-dir",
+    "filename": "pac-dir.png",
+    "position": [
+      2,
+      21
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:50:06.914703"
+  },
+  {
+    "name": "pac-dir-ab",
+    "filename": "pac-dir-ab.png",
+    "position": [
+      20,
+      21
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:52:14.344445"
+  },
+  {
+    "name": "pac-cima",
+    "filename": "pac-cima.png",
+    "position": [
+      2,
+      42
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:52:28.347979"
+  },
+  {
+    "name": "pac-cima-ab",
+    "filename": "pac-cima-ab.png",
+    "position": [
+      22,
+      43
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:52:46.487534"
+  },
+  {
+    "name": "pac-baixo",
+    "filename": "pac-baixo.png",
+    "position": [
+      2,
+      61
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:52:56.095874"
+  },
+  {
+    "name": "pac-baixo-fechado",
+    "filename": "pac-baixo-fechado.png",
+    "position": [
+      21,
+      59
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:53:08.196265"
+  },
+  {
+    "name": "pac-cima-1",
+    "filename": "pac-cima-1.png",
+    "position": [
+      2,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:53:30.867162"
+  },
+  {
+    "name": "red-cima-1",
+    "filename": "red-cima-1.png",
+    "position": [
+      2,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:53:43.105423"
+  },
+  {
+    "name": "red-cima-2",
+    "filename": "red-cima-2.png",
+    "position": [
+      22,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:53:51.709130"
+  },
+  {
+    "name": "red-baixo-1",
+    "filename": "red-baixo-1.png",
+    "position": [
+      42,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:54:18.651391"
+  },
+  {
+    "name": "red-baixo-2",
+    "filename": "red-baixo-2.png",
+    "position": [
+      62,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:54:26.231197"
+  },
+  {
+    "name": "red-esq-1",
+    "filename": "red-esq-1.png",
+    "position": [
+      82,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:54:32.145065"
+  },
+  {
+    "name": "red-esq-2",
+    "filename": "red-esq-2.png",
+    "position": [
+      102,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:54:42.919717"
+  },
+  {
+    "name": "red-dir-1",
+    "filename": "red-dir-1.png",
+    "position": [
+      122,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:55:11.857511"
+  },
+  {
+    "name": "red-dir-2",
+    "filename": "red-dir-2.png",
+    "position": [
+      142,
+      82
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:55:48.214954"
+  },
+  {
+    "name": "pink-cima-1",
+    "filename": "pink-cima-1.png",
+    "position": [
+      2,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:55:59.597102"
+  },
+  {
+    "name": "pink-cima-2",
+    "filename": "pink-cima-2.png",
+    "position": [
+      22,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:56:09.899525"
+  },
+  {
+    "name": "pink-baixo-1",
+    "filename": "pink-baixo-1.png",
+    "position": [
+      42,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:56:17.230180"
+  },
+  {
+    "name": "pink-baixo-2",
+    "filename": "pink-baixo-2.png",
+    "position": [
+      62,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:56:25.048855"
+  },
+  {
+    "name": "pink-esq-1",
+    "filename": "pink-esq-1.png",
+    "position": [
+      82,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:56:51.904038"
+  },
+  {
+    "name": "pink-esq-2",
+    "filename": "pink-esq-2.png",
+    "position": [
+      102,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:57:22.751131"
+  },
+  {
+    "name": "pink-dir-1",
+    "filename": "pink-dir-1.png",
+    "position": [
+      122,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:57:29.789834"
+  },
+  {
+    "name": "pink-dir-2",
+    "filename": "pink-dir-2.png",
+    "position": [
+      142,
+      102
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:57:39.166281"
+  },
+  {
+    "name": "blue-cima-1",
+    "filename": "blue-cima-1.png",
+    "position": [
+      2,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:58:01.458782"
+  },
+  {
+    "name": "blue-cima-2",
+    "filename": "blue-cima-2.png",
+    "position": [
+      22,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:58:07.794007"
+  },
+  {
+    "name": "blue-baixo-1",
+    "filename": "blue-baixo-1.png",
+    "position": [
+      42,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:58:15.747171"
+  },
+  {
+    "name": "blue-baixo-2",
+    "filename": "blue-baixo-2.png",
+    "position": [
+      62,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:58:24.658565"
+  },
+  {
+    "name": "blue-esq-1",
+    "filename": "blue-esq-1.png",
+    "position": [
+      82,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:58:30.455352"
+  },
+  {
+    "name": "blue-esq-2",
+    "filename": "blue-esq-2.png",
+    "position": [
+      102,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:58:44.691709"
+  },
+  {
+    "name": "blue-dir-1",
+    "filename": "blue-dir-1.png",
+    "position": [
+      122,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:59:21.610994"
+  },
+  {
+    "name": "blue-dir-2",
+    "filename": "blue-dir-2.png",
+    "position": [
+      142,
+      122
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T09:59:30.547194"
+  },
+  {
+    "name": "yellow-cima-1",
+    "filename": "yellow-cima-1.png",
+    "position": [
+      2,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:00:21.636343"
+  },
+  {
+    "name": "yellow-cima-2",
+    "filename": "yellow-cima-2.png",
+    "position": [
+      22,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:00:31.868508"
+  },
+  {
+    "name": "yellow-baixo-1",
+    "filename": "yellow-baixo-1.png",
+    "position": [
+      42,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:00:40.094772"
+  },
+  {
+    "name": "yellow-baixo-2",
+    "filename": "yellow-baixo-2.png",
+    "position": [
+      62,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:00:51.373681"
+  },
+  {
+    "name": "yellow-esq-1",
+    "filename": "yellow-esq-1.png",
+    "position": [
+      82,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:01:08.829357"
+  },
+  {
+    "name": "yellow-esq-2",
+    "filename": "yellow-esq-2.png",
+    "position": [
+      102,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:01:39.215974"
+  },
+  {
+    "name": "yellow-dir-1",
+    "filename": "yellow-dir-1.png",
+    "position": [
+      122,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:01:49.231086"
+  },
+  {
+    "name": "yellow-dir-2",
+    "filename": "yellow-dir-2.png",
+    "position": [
+      142,
+      142
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:02:22.091059"
+  },
+  {
+    "name": "vulnerable-blue-1",
+    "filename": "vulnerable-blue-1.png",
+    "position": [
+      2,
+      162
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:02:56.215812"
+  },
+  {
+    "name": "vulnerable-blue-2",
+    "filename": "vulnerable-blue-2.png",
+    "position": [
+      22,
+      162
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:03:04.748456"
+  },
+  {
+    "name": "vunerable-white-1",
+    "filename": "vunerable-white-1.png",
+    "position": [
+      42,
+      162
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:03:27.278622"
+  },
+  {
+    "name": "vulnerable-white-2",
+    "filename": "vulnerable-white-2.png",
+    "position": [
+      62,
+      162
+    ],
+    "size": [
+      16,
+      16
+    ],
+    "timestamp": "2025-06-11T10:03:40.237036"
+  }
+]
