@@ -1,124 +1,178 @@
-# Roteiro de Desenvolvimento: Versão do Pac-Man em Python (Orientado a Objetos)
+# Pac-Man Orientado a Objetos com Sprites 16x16
 
-## 1. Definição de Requisitos
+Um jogo Pac-Man implementado em Python usando princípios de programação orientada a objetos e a biblioteca Pygame, agora com **sprites reais 16x16**!
 
-### Funcionalidades Mínimas
-1. Labirinto com paredes e caminhos
-2. Pac-Man que se move em quatro direções (cima, baixo, esquerda e direita)
-3. Pellets (bolinhas) espalhados pelo labirinto
-4. Fantasmas com IA simples
-5. Sistema de pontuação, vidas e condições de fim de jogo
+## Características do Projeto
 
-### Extras Opcionais
-- Power-ups (pellets maiores) que deixam fantasmas vulneráveis
-- Sons e música de fundo
-- Animações: abertura/fechamento da boca do Pac-Man e morte dos fantasmas
-- Múltiplas fases
+### Conceitos de Orientação a Objetos Implementados:
+
+1. **Encapsulamento**: Atributos privados com getters/setters apropriados
+2. **Herança**: Hierarquia clara (GameObject → MovableObject → Player/Ghost)
+3. **Abstração**: Classes abstratas e métodos abstratos
+4. **Polimorfismo**: Métodos draw() e update() específicos para cada classe
+
+### Funcionalidades do Jogo:
+
+- ✅ **Sprites reais 16x16** carregados dos assets
+- ✅ **Movimento suave** do Pac-Man com detecção de colisões
+- ✅ **IA dos fantasmas** com diferentes comportamentos (scatter/chase/vulnerable)
+- ✅ **Sistema de power-ups** com quadrados brancos piscantes
+- ✅ **Sistema de pontuação** e vidas
+- ✅ **Estados do jogo** (Menu, Jogando, Pausado, Game Over, Vitória)
+- ✅ **Interface gráfica** completa com HUD
+- ✅ **Animações** baseadas em sprites reais
+
+## Instalação e Execução
+
+### Pré-requisitos:
+```bash
+pip install pygame
+```
+
+Ou usar o arquivo requirements.txt:
+```bash
+pip install -r requirements.txt
+```
+
+### Executar o jogo:
+```bash
+python main.py
+```
+
+## Controles
+
+- **Movimento**: WASD ou Setas direcionais
+- **Pausa**: ESC (durante o jogo)
+- **Menu**: ENTER (para navegar/reiniciar)
+
+## Estrutura de Arquivos
+
+```
+assets/
+├── sprites/
+│   ├── pacman/           # Sprites do Pac-Man (16x16)
+│   ├── ghosts/           # Sprites dos fantasmas (16x16)
+│   │   ├── red/         
+│   │   ├── pink/        
+│   │   ├── blue/        
+│   │   ├── yellow/      
+│   │   └── vulnerable/   # Estados vulneráveis
+│   └── power_ups/        # Power-ups (criados proceduralmente)
+
+src/
+├── __init__.py           # Módulo Python
+├── utils.py             # Classes utilitárias (Vector2D, Direction, GameState)
+├── sprite_manager.py    # ✨ NOVO: Gerenciador de sprites 16x16
+├── game_objects.py      # Classes dos objetos do jogo (com sprites)
+└── map.py              # Classe do mapa/labirinto
+
+main.py                 # Arquivo principal do jogo
+requirements.txt        # Dependências
+```
+
+## Sistema de Sprites
+
+### ✨ **Novo SpriteManager**
+- **Carregamento automático** de todos os sprites 16x16
+- **Sistema de animação** para Pac-Man e fantasmas
+- **Fallback inteligente** para sprites faltantes
+- **Colorização procedural** para fantasmas sem sprites específicos
+
+### 🎨 **Sprites Implementados:**
+
+#### **Pac-Man** (sprites reais):
+- `pac-fechado.png` - Pac-Man com boca fechada
+- `pac-dir.png`, `pac-dir-ab.png` - Movimento direita
+- `pac-esq.png`, `pac-esq-ab.png` - Movimento esquerda  
+- `pac-cima.png`, `pac-cima-ab.png` - Movimento cima
+- `pac-baixo.png`, `pac-baixo-fechado.png` - Movimento baixo
+
+#### **Fantasmas** (sprites reais):
+- **Vermelho**: `red-[direção]-[frame].png`
+- **Outros cores**: Colorização automática dos sprites vermelhos
+- **Vulneráveis**: `vulnerable-blue-[frame].png`, `vulnerable-white-[frame].png`
+
+#### **Power-ups** (procedural):
+- ⬜ Quadrados brancos piscantes (como solicitado)
+
+#### **Paredes** (procedural):
+- 🟦 Retângulos azuis (sem sprites disponíveis)
+
+## Classes Principais
+
+### `SpriteManager` ✨ **NOVO**
+- Gerencia carregamento e animação de sprites 16x16
+- Sistema inteligente de fallback
+- Colorização automática para sprites faltantes
+
+### `GameObject` (Abstrata)
+- Classe base para todos os objetos do jogo
+- Agora com suporte a sprites e animação
+- Define interface comum (draw, update)
+
+### `MovableObject` (Herda de GameObject)
+- Adiciona capacidade de movimento
+- Sistema de direções e velocidade
+- Detecção de colisões otimizada para sprites 16x16
+
+### `Player` (Herda de MovableObject)
+- Implementa o Pac-Man com sprites reais
+- Animação de boca baseada na direção
+- Sistema de vidas, pontuação e power-ups
+- Efeito visual durante power-up
+
+### `Ghost` (Herda de MovableObject)
+- Implementa os fantasmas com sprites reais
+- IA com diferentes modos (scatter/chase)
+- Estados com sprites específicos (normal/vulnerable)
+- Animação fluida entre frames
+
+### `Pellet` (Herda de GameObject)
+- Pontos coletáveis com sprites
+- Tipos: normal (círculo) e power-up (quadrado piscante)
+
+### `Map`
+- Gerencia o labirinto otimizado para 16x16
+- Layout expandido (35x21 células)
+- Sistema de spawn ajustado
+- Desenho híbrido (sprites + procedural)
+
+## Melhorias Técnicas
+
+### 🚀 **Performance:**
+- Sprites carregados uma vez na inicialização
+- Sistema de cache inteligente
+- Detecção de colisões otimizada
+
+### 🎨 **Visual:**
+- Resolução 560x336 (35x21 células de 16px)
+- Animações suaves baseadas em sprites
+- Efeitos visuais para power-ups
+- Colorização automática para fantasmas
+
+### 🔧 **Código:**
+- Separação clara entre sprites e lógica
+- Sistema modular e extensível
+- Fallbacks inteligentes para assets faltantes
+
+## Para Executar:
+
+```bash
+# Instalar dependências
+pip install pygame
+
+# Executar o jogo com sprites
+python main.py
+```
+
+## Tecnologias
+
+- **Python 3.7+**
+- **Pygame 2.5+**
+- **Sprites 16x16** (formato PNG)
+- **Programação Orientada a Objetos**
+- **Padrões de Design**: State Machine, Strategy, Manager
 
 ---
 
-## 2. Configuração do Ambiente
-
-1. Instalar **Python** (versão ≥ 3.8)
-2. Instalar **Pygame**:
-   ```bash
-   pip install pygame
-   ```
-3. Estrutura de pastas inicial:
-   ```plaintext
-   pacman/
-   ├── assets/       # imagens e sons
-   ├── src/          # código-fonte
-   │   ├── main.py
-   │   ├── game.py
-   │   ├── player.py
-   │   ├── ghost.py
-   │   ├── map.py
-   │   └── pellet.py
-   └── README.md
-   ```
-
-## 3. Projeto de Classes (UML Simplificado)
-
-- **Game**
-    - **Responsabilidade:** Loop principal e estados (menu, jogando, game over)
-    - **Atributos Principais:** `estado`, `tela`, `clock`
-    - **Métodos Principais:** `run()`, `process_events()`, `render()`
-
-- **Map**
-    - **Responsabilidade:** Carregar layout do labirinto e renderizar paredes e caminhos
-    - **Atributos Principais:** `layout` (matriz 2D)
-    - **Métodos Principais:** `load_map()`, `draw()`
-
-- **Player**
-    - **Responsabilidade:** Lógica do Pac-Man: movimento, comer pellets, vidas, pontuação
-    - **Atributos Principais:** `posição`, `direção`, `velocidade`, `vidas`
-    - **Métodos Principais:** `move()`, `eat_pellet()`, `draw()`
-
-- **Pellet**
-    - **Responsabilidade:** Representar bolinha normal ou power-up
-    - **Atributos Principais:** `posição`, `tipo` (normal/vulnerável)
-    - **Métodos Principais:** `draw()`, `be_eaten()`
-
-- **Ghost**
-    - **Responsabilidade:** IA simples com estados (normal, vulnerável) e reset de posição
-    - **Atributos Principais:** `posição`, `estado`, `velocidade`, `direção`
-    - **Métodos Principais:** `move_ai()`, `draw()`, `reset()`
-
-## 4. Desenvolvimento Incremental
-
-1. Loop básico e janela
-   - Iniciar Pygame e criar janela
-   - Configurar loop de eventos sem lógica do jogo
-
-2. Renderização do labirinto
-   - Modelar mapa como matriz 2D (`0` = caminho, `1` = parede)
-   - Desenhar retângulos para paredes
-
-3. Movimentação do Pac-Man
-   - Capturar entrada do teclado (setas)
-   - Atualizar direção e verificar colisões antes de mover
-
-4. Pellets e pontuação
-   - Gerar `Pellet` em todas as células de caminho
-   - Detectar colisão Pac-Man × Pellet e remover pellet
-   - Atualizar pontuação
-
-5. Fantasmas com IA simples
-   - Instanciar `Ghost` em posições fixas
-   - Movimento aleatório ou perseguição básica (direção livre em direção ao Pac-Man)
-
-6. Colisões Pac-Man × Fantasma
-   - Fantasma normal: Pac-Man perde vida e ambos resetam
-   - Fantasma vulnerável: fantasma “morre” e volta ao spawn
-
-7. Estados de jogo e HUD
-   - Telas: menu inicial, instruções, jogo em andamento, game over e vitória
-   - Barra de HUD com pontuação e vidas
-
-8. Power-ups e temporizadores
-   - Pellets maiores ativam estado vulnerável dos fantasmas
-   - Gerenciar timers para reverter estado
-
-9. Áudio e animações
-   - Sons: comer pellet, power-up, perder vida, música de fundo
-   - Animações: boca do Pac-Man e morte dos fantasmas
-
-10. Testes e ajustes finais
-    - Verificar vidas, game over e vitória
-    - Ajustar velocidades, layout e IA
-    - Refatorar código (princípios DRY e SOLID)
-
----
-
-## 5. Documentação e Entrega
-
-- **README.md**: instruções de instalação e execução, visão geral da arquitetura e classes
-- Comentários no código: descrição de classes e métodos principais
-- **Demonstração** (opcional): vídeo curto mostrando o jogo em ação
-
-> **Dica:**
-> - Use grids para simplificar colisões (checando células em vez de pixels)
-> - Para IA avançada, pesquise algoritmos como A* ou BFS
-> - Mantenha responsabilidade única em cada classe (SRP do SOLID)
-
+**✨ Novidade**: Agora com sprites reais 16x16 carregados automaticamente dos assets! O sistema mantém compatibilidade total com o código anterior e adiciona melhorias visuais significativas. 

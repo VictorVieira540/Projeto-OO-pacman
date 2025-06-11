@@ -152,6 +152,11 @@ class Game:
         if self._state != GameState.PLAYING:
             return
             
+        # Debug: Estado do jogo
+        print(f"Estado do jogo: {self._state}")
+        print(f"Posição do jogador: {self._player.position}")
+        print(f"Pellets restantes: {len(self._pellets)}")
+        
         # Atualiza player
         self._player.update(delta_time, self._map)
         

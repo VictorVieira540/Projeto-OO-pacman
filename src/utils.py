@@ -21,6 +21,7 @@ class Vector2D:
         self.y = y
 
     def __add__(self, other):
+        """Adiciona dois vetores ou um vetor e um tuple"""
         if isinstance(other, Vector2D):
             return Vector2D(self.x + other.x, self.y + other.y)
         elif isinstance(other, tuple) and len(other) == 2:
@@ -28,6 +29,7 @@ class Vector2D:
         raise TypeError("Operando inválido para adição")
 
     def __sub__(self, other):
+        """Subtrai dois vetores ou um vetor e um tuple"""
         if isinstance(other, Vector2D):
             return Vector2D(self.x - other.x, self.y - other.y)
         elif isinstance(other, tuple) and len(other) == 2:
@@ -35,9 +37,11 @@ class Vector2D:
         raise TypeError("Operando inválido para subtração")
 
     def __mul__(self, scalar):
+        """Multiplica um vetor por um escalar"""
         return Vector2D(self.x * scalar, self.y * scalar)
 
     def __eq__(self, other):
+        """Verifica se dois vetores são iguais"""
         if isinstance(other, Vector2D):
             return self.x == other.x and self.y == other.y
         elif isinstance(other, tuple) and len(other) == 2:
@@ -45,6 +49,7 @@ class Vector2D:
         return False
 
     def __str__(self):
+        """Retorna uma string representando o vetor"""
         return f"({self.x}, {self.y})"
 
     def magnitude(self):
@@ -63,7 +68,9 @@ class Vector2D:
         return (self - other).magnitude()
 
     def to_tuple(self):
+        """Converte o vetor para um tuple"""
         return (self.x, self.y)
 
     def copy(self):
+        """Retorna uma cópia do vetor"""
         return Vector2D(self.x, self.y) 
