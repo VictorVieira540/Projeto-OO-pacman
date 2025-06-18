@@ -210,9 +210,11 @@ class Ghost(MovableObject):
         # Modo atual do fantasma:
         # - scatter: fantasma foge para os cantos do mapa
         # - chase: fantasma persegue o jogador com comportamento específico
-        self._current_mode = "scatter"
+        self._current_mode = "scatter"  # Começa em scatter
         self._path_finding_timer = 0
         self._original_color = color
+        self._last_direction = Direction.NONE
+        self._personality_timer = 0  # Timer para comportamentos específicos
 
     @property
     def state(self):
@@ -228,7 +230,7 @@ class Ghost(MovableObject):
         self._vulnerable_timer = duration
         self._speed = max(1, self._speed - 1)  # Reduz velocidade quando vulnerável, mas mantém um mínimo de 1
 
-    def get_target_position(self, player_position, other_ghosts=None):
+    def get_target_position(self, player_position, player_direction=None, other_ghosts=None):
         """Calcula a posição alvo baseada no tipo de fantasma e modo atual"""
         if self._current_mode == "scatter":
             # Modo scatter: vai para cantos específicos
@@ -243,32 +245,54 @@ class Ghost(MovableObject):
         elif self._current_mode == "chase":
             # Modo chase: persegue o jogador com comportamentos diferentes
             if self._ghost_type == "red":
-                # Fantasma vermelho: persegue diretamente
+                # Fantasma vermelho: persegue diretamente (Blinky)
                 return player_position.copy()
                 
             elif self._ghost_type == "pink":
-                # Fantasma rosa: mira 4 células à frente do jogador
-                # TODO: Implementar lógica baseada na direção do jogador
-                return player_position.copy()
+                # Fantasma rosa: mira 4 células à frente do jogador (Pinky)
+                if player_direction:
+                    # Calcula posição 4 células à frente do jogador
+                    cell_size = 16  # Tamanho da célula
+                    offset_x = player_direction.value[0] * cell_size * 4
+                    offset_y = player_direction.value[1] * cell_size * 4
+                    target = Vector2D(
+                        player_position.x + offset_x,
+                        player_position.y + offset_y
+                    )
+                    return target
+                else:
+                    return player_position.copy()
                 
             elif self._ghost_type == "cyan":
-                # Fantasma ciano: comportamento mais complexo
-                # Usa a posição do jogador e do fantasma vermelho
+                # Fantasma ciano: comportamento mais complexo (Inky)
                 if other_ghosts:
                     red_ghost = next((g for g in other_ghosts if g._ghost_type == "red"), None)
                     if red_ghost:
                         # Calcula ponto intermediário entre jogador e fantasma vermelho
+                        # Primeiro, calcula a posição 2 células à frente do jogador
+                        if player_direction:
+                            cell_size = 16
+                            offset_x = player_direction.value[0] * cell_size * 2
+                            offset_y = player_direction.value[1] * cell_size * 2
+                            player_ahead = Vector2D(
+                                player_position.x + offset_x,
+                                player_position.y + offset_y
+                            )
+                        else:
+                            player_ahead = player_position.copy()
+                        
+                        # Agora calcula o ponto médio entre player_ahead e red_ghost
                         mid_point = Vector2D(
-                            (player_position.x + red_ghost.position.x) / 2,
-                            (player_position.y + red_ghost.position.y) / 2
+                            (player_ahead.x + red_ghost.position.x) / 2,
+                            (player_ahead.y + red_ghost.position.y) / 2
                         )
                         return mid_point
                 return player_position.copy()
                 
-            else:  # orange
+            else:  # orange (Clyde)
                 # Fantasma laranja: alterna entre perseguir e fugir
                 distance = self._position.distance_to(player_position)
-                if distance > 100:  # Se estiver longe, persegue
+                if distance > 80:  # Se estiver longe, persegue
                     return player_position.copy()
                 else:  # Se estiver perto, foge para o canto
                     return Vector2D(50, 450)  # Canto inferior esquerdo
@@ -300,20 +324,81 @@ class Ghost(MovableObject):
             # Escolhe a direção que o aproxima mais do alvo
             return min(possible_directions, key=lambda x: x[1])[0]
 
+    def choose_direction_advanced(self, game_map, target_position):
+        """Escolhe direção com lógica mais avançada baseada na personalidade do fantasma"""
+        possible_directions = []
+        
+        # Testa cada direção possível
+        for direction in [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]:
+            if self.can_move(direction, game_map):
+                # Calcula onde estaria se movesse nesta direção
+                test_pos = Vector2D(
+                    self._position.x + direction.value[0] * self._speed,
+                    self._position.y + direction.value[1] * self._speed
+                )
+                distance = test_pos.distance_to(target_position)
+                possible_directions.append((direction, distance))
+        
+        if not possible_directions:
+            return Direction.NONE
+        
+        if self._state == "vulnerable":
+            # Quando vulnerável, foge do alvo
+            return max(possible_directions, key=lambda x: x[1])[0]
+        
+        # Comportamentos específicos por tipo de fantasma
+        if self._ghost_type == "red":
+            # Vermelho: sempre escolhe a direção mais direta
+            return min(possible_directions, key=lambda x: x[1])[0]
+            
+        elif self._ghost_type == "pink":
+            # Rosa: às vezes escolhe direção aleatória para surpreender
+            if random.random() < 0.1:  # 10% de chance de escolha aleatória
+                return random.choice(possible_directions)[0]
+            else:
+                return min(possible_directions, key=lambda x: x[1])[0]
+                
+        elif self._ghost_type == "cyan":
+            # Ciano: prefere direções que não sejam a oposta à atual
+            if self._direction != Direction.NONE:
+                opposite_direction = Direction((-self._direction.value[0], -self._direction.value[1]))
+                # Remove a direção oposta das possibilidades se houver outras opções
+                filtered_directions = [d for d in possible_directions if d[0] != opposite_direction]
+                if filtered_directions:
+                    possible_directions = filtered_directions
+            
+            return min(possible_directions, key=lambda x: x[1])[0]
+            
+        else:  # orange
+            # Laranja: comportamento mais imprevisível
+            if random.random() < 0.15:  # 15% de chance de escolha aleatória
+                return random.choice(possible_directions)[0]
+            else:
+                return min(possible_directions, key=lambda x: x[1])[0]
+
     def update_mode(self, delta_time):
-        """Atualiza o modo do fantasma (scatter/chase)"""
+        """Atualiza o modo do fantasma (scatter/chase) com timing mais realista"""
         self._mode_timer += delta_time * 1000
         
-        # Alterna entre modos a cada 10 segundos
-        if self._mode_timer > 10000:
-            self._current_mode = "chase" if self._current_mode == "scatter" else "scatter"
-            self._mode_timer = 0
+        # Timing baseado no Pac-Man original
+        if self._current_mode == "scatter":
+            # Scatter dura 7 segundos
+            if self._mode_timer > 7000:
+                self._current_mode = "chase"
+                self._mode_timer = 0
+        else:  # chase
+            # Chase dura 20 segundos
+            if self._mode_timer > 20000:
+                self._current_mode = "scatter"
+                self._mode_timer = 0
 
     def reset_position(self):
         self._position = self._initial_position.copy()
         self._state = "normal"
-        self._speed = 1.5  # Velocidade padrão (ajustada para combinar com a inicialização)
+        self._speed = 1.5  # Velocidade padrão
         self._vulnerable_timer = 0
+        self._current_mode = "scatter"  # Volta para scatter
+        self._mode_timer = 0
 
     def draw(self, screen):
         # Usa sprites reais dos fantasmas
@@ -331,27 +416,28 @@ class Ghost(MovableObject):
         
         screen.blit(sprite, (x, y))
 
-    def update(self, delta_time, player_position=None, game_map=None, other_ghosts=None):
+    def update(self, delta_time, player_position=None, player_direction=None, game_map=None, other_ghosts=None):
         # Atualiza timer de vulnerabilidade
         if self._state == "vulnerable":
             self._vulnerable_timer -= delta_time * 1000
             if self._vulnerable_timer <= 0:
                 self._state = "normal"
-                self._speed = 4  # Restaura velocidade normal
+                self._speed = 1.5  # Restaura velocidade normal
 
         # Atualiza modo
         self.update_mode(delta_time)
 
         if player_position and game_map:
             # Calcula posição alvo
-            target = self.get_target_position(player_position, other_ghosts)
+            target = self.get_target_position(player_position, player_direction, other_ghosts)
             
             # Escolhe direção a cada intervalo
             self._path_finding_timer += delta_time * 1000
-            if self._path_finding_timer > 500:  # Muda direção a cada 500ms
-                new_direction = self.choose_direction(game_map, target)
+            if self._path_finding_timer > 300:  # Muda direção a cada 300ms (mais responsivo)
+                new_direction = self.choose_direction_advanced(game_map, target)
                 if new_direction != Direction.NONE:
                     self._direction = new_direction
+                    self._last_direction = new_direction
                 self._path_finding_timer = 0
 
             # Move
@@ -359,7 +445,9 @@ class Ghost(MovableObject):
                 self.move()
             else:
                 # Se não pode mover, escolhe nova direção imediatamente
-                self._direction = self.choose_direction(game_map, target)
+                self._direction = self.choose_direction_advanced(game_map, target)
+                if self._direction != Direction.NONE:
+                    self._last_direction = self._direction
 
         self._animation_frame += 1
 

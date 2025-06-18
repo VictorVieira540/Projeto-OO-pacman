@@ -200,7 +200,7 @@ class Game:
         
         # Atualiza fantasmas
         for ghost in self._ghosts:
-            ghost.update(delta_time, self._player.position, self._map, self._ghosts)
+            ghost.update(delta_time, self._player.position, self._player.direction, self._map, self._ghosts)
         
         # Colisão com pellets
         pellets_to_remove = []
