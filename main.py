@@ -4,10 +4,19 @@ from src.game_objects import Player, Ghost, Pellet
 from src.map import Map
 from src.utils import Vector2D, Direction, GameState
 from src.sprite_manager import sprite_manager
+from src.sound_manager import sound_manager, SoundType
 
 class Game:
     def __init__(self, width=560, height=336):  # 35x21 células de 16px cada = 560x336
         pygame.init()
+        
+        # Inicializa o mixer do Pygame explicitamente
+        try:
+            pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+            print("Mixer do Pygame inicializado no Game")
+        except Exception as e:
+            print(f"Erro ao inicializar mixer no Game: {e}")
+        
         self._width = width
         self._height = height
         self._screen = pygame.display.set_mode((self._width, self._height))
@@ -18,11 +27,21 @@ class Game:
         self._font_medium = pygame.font.Font(None, 32)
         self._font_small = pygame.font.Font(None, 24)
         
-        # Sons (TODO: Adicionar sons quando disponíveis)
-        # self._sound_eat = pygame.mixer.Sound("assets/sounds/eat.wav")
-        # self._sound_power_up = pygame.mixer.Sound("assets/sounds/power_up.wav")
+        # Inicializa o sistema de sons
+        self._initialize_sound_system()
         
         self._initialize_game()
+
+    def _initialize_sound_system(self):
+        """Inicializa o sistema de sons do jogo"""
+        # Configura volumes iniciais
+        sound_manager.set_volume(SoundType.MUSIC, 0.4)
+        sound_manager.set_volume(SoundType.EFFECT, 0.6)
+        sound_manager.set_volume(SoundType.UI, 0.7)
+        sound_manager.set_volume(SoundType.GHOST, 0.5)
+        
+        # Inicia música de fundo
+        sound_manager.play_sound("start-music")
 
     def _initialize_game(self):
         """Inicializa os objetos do jogo"""
@@ -82,8 +101,12 @@ class Game:
 
     def _reset_game(self):
         """Reinicia o jogo"""
+        # Para todos os sons
+        sound_manager.stop_all_sounds()
         self._initialize_game()
         self._state = GameState.PLAYING
+        # Inicia música do jogo
+        sound_manager.play_sound("start-music")
 
     def _reset_positions(self):
         """Reinicia posições após morte"""
@@ -111,6 +134,8 @@ class Game:
                 if self._state == GameState.MENU:
                     if event.key == pygame.K_RETURN:
                         self._state = GameState.PLAYING
+                        # Toca som de início do jogo
+                        sound_manager.play_sound("start-music")
                     elif event.key == pygame.K_ESCAPE:
                         return False
                         
@@ -126,24 +151,37 @@ class Game:
                         self._player.direction = Direction.RIGHT
                     elif event.key == pygame.K_ESCAPE:
                         self._state = GameState.PAUSED
+                        # Pausa todos os sons
+                        sound_manager.pause_all_sounds()
                         
                 elif self._state == GameState.PAUSED:
                     if event.key == pygame.K_ESCAPE:
                         self._state = GameState.PLAYING
+                        # Despausa todos os sons
+                        sound_manager.unpause_all_sounds()
                     elif event.key == pygame.K_RETURN:
                         self._state = GameState.MENU
+                        # Para todos os sons e volta para música do menu
+                        sound_manager.stop_all_sounds()
+                        sound_manager.play_sound("start-music")
                         
                 elif self._state == GameState.GAME_OVER:
                     if event.key == pygame.K_RETURN:
                         self._reset_game()
                     elif event.key == pygame.K_ESCAPE:
                         self._state = GameState.MENU
+                        # Para todos os sons e volta para música do menu
+                        sound_manager.stop_all_sounds()
+                        sound_manager.play_sound("start-music")
                         
                 elif self._state == GameState.VICTORY:
                     if event.key == pygame.K_RETURN:
                         self._reset_game()
                     elif event.key == pygame.K_ESCAPE:
                         self._state = GameState.MENU
+                        # Para todos os sons e volta para música do menu
+                        sound_manager.stop_all_sounds()
+                        sound_manager.play_sound("start-music")
         
         return True
 
@@ -183,12 +221,11 @@ class Game:
                     # Torna todos os fantasmas vulneráveis
                     for ghost in self._ghosts:
                         ghost.set_vulnerable(8000)  # 8 segundos
-                    # TODO: Tocar som de power-up
-                    # pygame.mixer.Sound.play(self._sound_power_up)
+                    # Toca som de power-up
+                    sound_manager.play_sound("ghost-turn-to-blue")
                 else:
-                    # TODO: Tocar som de comer pellet
-                    # pygame.mixer.Sound.play(self._sound_eat)
-                    pass  # Placeholder para futuras funcionalidades
+                    # Toca som de comer pellet
+                    sound_manager.play_sound("eating")
                 
                 pellets_to_remove.append(pellet)
         
@@ -199,6 +236,9 @@ class Game:
         # Verifica vitória
         if len(self._pellets) == 0:
             self._state = GameState.VICTORY
+            # Toca música de vitória
+            sound_manager.stop_all_sounds()
+            sound_manager.play_sound("credit")
             return
         
         # Colisão com fantasmas
@@ -210,13 +250,19 @@ class Game:
                     # Come o fantasma
                     self._player.eat_pellet(200)
                     ghost.reset_position()
-                    # TODO: Adicionar efeito visual/sonoro
+                    # Toca som de comer fantasma
+                    sound_manager.play_sound("eating-ghost")
                 elif ghost.state == "normal":
                     # Perde vida
                     self._player.lose_life()
+                    # Toca som de morte
+                    sound_manager.play_sound("miss")
                     
                     if self._player.lives <= 0:
                         self._state = GameState.GAME_OVER
+                        # Toca música de game over
+                        sound_manager.stop_all_sounds()
+                        sound_manager.play_sound("miss")
                     else:
                         # Reinicia posições
                         self._reset_positions()
