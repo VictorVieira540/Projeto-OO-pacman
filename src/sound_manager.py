@@ -56,7 +56,7 @@ class SoundManager:
             "extend": SoundType.EFFECT,
             
             # Música
-            "start-music": SoundType.MUSIC,
+            "music_menu": SoundType.MUSIC,
             "coffee-break-music": SoundType.MUSIC,
             "credit": SoundType.MUSIC,
             
