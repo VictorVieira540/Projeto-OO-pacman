@@ -35,13 +35,13 @@ class Game:
     def _initialize_sound_system(self):
         """Inicializa o sistema de sons do jogo"""
         # Configura volumes iniciais
-        sound_manager.set_volume(SoundType.MUSIC, 0.4)
-        sound_manager.set_volume(SoundType.EFFECT, 0.6)
-        sound_manager.set_volume(SoundType.UI, 0.7)
-        sound_manager.set_volume(SoundType.GHOST, 0.5)
+        sound_manager.set_volume(SoundType.MUSIC, 0.5)
+        sound_manager.set_volume(SoundType.EFFECT, 0.7)
+        sound_manager.set_volume(SoundType.UI, 0.8)
+        sound_manager.set_volume(SoundType.GHOST, 0.6)
         
         # Inicia música de fundo
-        sound_manager.play_sound("start-music")
+        sound_manager.play_sound("music_menu")
 
     def _initialize_game(self):
         """Inicializa os objetos do jogo"""
