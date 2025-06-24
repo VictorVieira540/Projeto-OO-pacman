@@ -1,10 +1,35 @@
 import pygame
 import sys
+import json
+import os
 from src.game_objects import Player, Ghost, Pellet
 from src.map import Map
 from src.utils import Vector2D, Direction, GameState
 from src.sprite_manager import sprite_manager
 from src.sound_manager import sound_manager, SoundType
+
+class HighScoreManager:
+    def __init__(self, filename="highscores.json"):
+        self.filename = filename
+        self.highscores = self.load_highscores()
+
+    def load_highscores(self):
+        if os.path.exists(self.filename):
+            with open(self.filename, "r", encoding="utf-8") as f:
+                try:
+                    return json.load(f)
+                except Exception:
+                    return []
+        return []
+
+    def save_highscores(self):
+        with open(self.filename, "w", encoding="utf-8") as f:
+            json.dump(self.highscores, f, ensure_ascii=False, indent=2)
+
+    def add_score(self, name, score):
+        self.highscores.append({"name": name, "score": score})
+        self.highscores = sorted(self.highscores, key=lambda x: x["score"], reverse=True)[:10]  # Top 10
+        self.save_highscores()
 
 class Game:
     def __init__(self, width=560, height=336):  # 35x21 células de 16px cada = 560x336
@@ -29,6 +54,16 @@ class Game:
         
         # Inicializa o sistema de sons
         self._initialize_sound_system()
+        
+        self._menu_options = ["Jogar", "Opções", "Sair"]
+        self._selected_option = 0
+        self._menu_animation_frame = 0
+        
+        self._highscore_manager = HighScoreManager()
+        self._input_active = False
+        self._player_name = ""
+        self._show_save_confirmation = False
+        self._save_confirmation_timer = 0
         
         self._initialize_game()
 
@@ -57,7 +92,7 @@ class Game:
             color=(255, 255, 0), 
             size=sprite_manager.sprite_size,  # Usa tamanho do sprite
             speed=2,  
-            lives=3
+            lives=1
         )
         
         # Fantasmas
@@ -124,6 +159,12 @@ class Game:
     def state(self, new_state):
         self._state = new_state
 
+    def _set_game_over(self):
+        self._state = GameState.GAME_OVER
+        self._input_active = True
+        self._player_name = ""
+        self._show_save_confirmation = False
+
     def process_events(self):
         """Processa eventos do jogador"""
         for event in pygame.event.get():
@@ -132,10 +173,19 @@ class Game:
                 
             elif event.type == pygame.KEYDOWN:
                 if self._state == GameState.MENU:
-                    if event.key == pygame.K_RETURN:
-                        self._state = GameState.PLAYING
-                        # Toca som de início do jogo
-                        sound_manager.play_sound("start-music")
+                    if event.key == pygame.K_UP:
+                        self._selected_option = (self._selected_option - 1) % len(self._menu_options)
+                    elif event.key == pygame.K_DOWN:
+                        self._selected_option = (self._selected_option + 1) % len(self._menu_options)
+                    elif event.key == pygame.K_RETURN:
+                        if self._selected_option == 0:
+                            self._state = GameState.PLAYING
+                            sound_manager.play_sound("start-music")
+                        elif self._selected_option == 1:
+                            # Exemplo: abrir tela de opções (não implementado)
+                            pass
+                        elif self._selected_option == 2:
+                            return False
                     elif event.key == pygame.K_ESCAPE:
                         return False
                         
@@ -166,6 +216,30 @@ class Game:
                         sound_manager.play_sound("start-music")
                         
                 elif self._state == GameState.GAME_OVER:
+                    # PRIORIDADE: input de nome
+                    if self._input_active:
+                        if event.key == pygame.K_RETURN:
+                            if self._player_name.strip():
+                                self._highscore_manager.add_score(self._player_name.strip(), self._player.score)
+                                self._input_active = False
+                                self._show_save_confirmation = True
+                                self._save_confirmation_timer = pygame.time.get_ticks()
+                        elif event.key == pygame.K_BACKSPACE:
+                            self._player_name = self._player_name[:-1]
+                        else:
+                            if len(self._player_name) < 12 and event.unicode.isprintable():
+                                self._player_name += event.unicode
+                        return True  # Não processa mais nada enquanto input de nome está ativo
+                    # Só permite ENTER para reiniciar ou ESC para menu se não estiver no input de nome
+                    elif not self._input_active and not self._show_save_confirmation:
+                        if event.key == pygame.K_RETURN:
+                            self._reset_game()
+                        elif event.key == pygame.K_ESCAPE:
+                            self._state = GameState.MENU
+                            sound_manager.stop_all_sounds()
+                            sound_manager.play_sound("start-music")
+                        return True
+                elif self._state == GameState.VICTORY:
                     if event.key == pygame.K_RETURN:
                         self._reset_game()
                     elif event.key == pygame.K_ESCAPE:
@@ -173,8 +247,7 @@ class Game:
                         # Para todos os sons e volta para música do menu
                         sound_manager.stop_all_sounds()
                         sound_manager.play_sound("start-music")
-                        
-                elif self._state == GameState.VICTORY:
+                elif self._state == GameState.INTERMISSION:
                     if event.key == pygame.K_RETURN:
                         self._reset_game()
                     elif event.key == pygame.K_ESCAPE:
@@ -186,7 +259,15 @@ class Game:
         return True
 
     def update(self, delta_time):
-        """Atualiza lógica do jogo"""
+        # Sempre verifica se precisa voltar ao menu após salvar
+        if self._show_save_confirmation:
+            if pygame.time.get_ticks() - self._save_confirmation_timer > 500:
+                self._show_save_confirmation = False
+                self._state = GameState.MENU
+                sound_manager.stop_all_sounds()
+                sound_manager.play_sound("start-music")
+            return  # Não precisa atualizar o resto
+
         if self._state != GameState.PLAYING:
             return
             
@@ -259,8 +340,7 @@ class Game:
                     sound_manager.play_sound("miss")
                     
                     if self._player.lives <= 0:
-                        self._state = GameState.GAME_OVER
-                        # Toca música de game over
+                        self._set_game_over()
                         sound_manager.stop_all_sounds()
                         sound_manager.play_sound("miss")
                     else:
@@ -302,12 +382,19 @@ class Game:
         self._screen.fill((0, 0, 0))  # Fundo preto
         
         if self._state == GameState.MENU:
-            # Tela do menu
-            self._draw_text_centered("PAC-MAN OO", self._font_large, (255, 255, 0), -50)
-            self._draw_text_centered("Com Sprites 16x16!", self._font_medium, (255, 255, 255), -10)
-            self._draw_text_centered("ENTER - Jogar", self._font_small, (255, 255, 255), 30)
-            self._draw_text_centered("ESC - Sair", self._font_small, (255, 255, 255), 55)
-            self._draw_text_centered("Controles: WASD ou Setas", self._font_small, (200, 200, 200), 100)
+            self._menu_animation_frame += 1
+            # Tela do menu interativo
+            self._draw_text_centered("PAC-MAN", self._font_large, (255, 255, 0), -100)
+            for i, option in enumerate(self._menu_options):
+                color = (255, 255, 0) if i == self._selected_option else (255, 255, 255)
+                text_surface = self._font_medium.render(option, True, color)
+                text_rect = text_surface.get_rect(center=(self._width // 2, self._height // 2 + i * 40))
+                self._screen.blit(text_surface, text_rect)
+                if i == self._selected_option:
+                    pacman_sprite = sprite_manager.get_pacman_sprite(Direction.RIGHT, self._menu_animation_frame)
+                    sprite_rect = pacman_sprite.get_rect(center=(self._width // 2 - 100, self._height // 2 + i * 40))
+                    self._screen.blit(pacman_sprite, sprite_rect)
+            self._draw_text_centered("Use as setas para navegar e ENTER para selecionar", self._font_small, (200, 200, 200), 100)
             
         elif self._state == GameState.PLAYING:
             # Jogo em andamento
@@ -350,8 +437,16 @@ class Game:
             self._draw_text_centered(f"Pontuação Final: {self._player.score}", self._font_medium, (255, 255, 255), -10)
             self._draw_text_centered(f"Pellets Comidos: {self._total_pellets - len(self._pellets)}/{self._total_pellets}", 
                                    self._font_small, (255, 255, 255), 20)
-            self._draw_text_centered("ENTER - Jogar Novamente", self._font_small, (255, 255, 255), 50)
-            self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 75)
+            if self._input_active:
+                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 60)
+                name_surface = self._font_medium.render(self._player_name + "|", True, (255, 255, 255))
+                name_rect = name_surface.get_rect(center=(self._width // 2, self._height // 2 + 100))
+                self._screen.blit(name_surface, name_rect)
+            elif self._show_save_confirmation:
+                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 60)
+            else:
+                self._draw_text_centered("ENTER - Jogar Novamente", self._font_small, (255, 255, 255), 50)
+                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 75)
             
         elif self._state == GameState.VICTORY:
             # Tela de vitória
@@ -361,6 +456,12 @@ class Game:
             self._draw_text_centered("ENTER - Jogar Novamente", self._font_small, (255, 255, 255), 50)
             self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 75)
         
+        elif self._state == GameState.INTERMISSION:
+            # Tela de intermissão
+            self._draw_text_centered("INTERMISSÃO", self._font_large, (255, 255, 255), -50)
+            self._draw_text_centered("Carregando...", self._font_small, (255, 255, 255), 50)
+        
+
         pygame.display.flip()
 
     def run(self):

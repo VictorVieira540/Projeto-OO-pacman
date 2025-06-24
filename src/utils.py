@@ -15,6 +15,8 @@ class GameState(Enum):
     PAUSED = 3 #Estado em que o jogo está pausado
     VICTORY = 4 #Estado em que o jogador vence
     INTERMISSION = 5 #estado em que o jogo está em pausa entre fases
+    MENU_OPTIONS = 6 
+    HISTORY = 7 #historico de pontuações
 
 class Vector2D: #classe que representa um vetor 2D
     def __init__(self, x, y):
