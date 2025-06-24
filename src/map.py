@@ -121,7 +121,7 @@ class Map:
     def is_valid_position(self, position: Vector2D, object_size=16):
         """Verifica se uma posição é válida considerando o tamanho do objeto"""
         # Verifica os 4 cantos do objeto com uma margem menor
-        half_size = object_size // 3  # Reduzido de 2 para 3 para dar mais espaço
+        half_size = object_size // 2.25  
         corners = [
             Vector2D(position.x - half_size, position.y - half_size),
             Vector2D(position.x + half_size, position.y - half_size),

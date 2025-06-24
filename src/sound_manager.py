@@ -45,7 +45,7 @@ class SoundManager:
         
         # Controle de sobreposição - armazena último tempo de reprodução
         self._last_play_times: Dict[str, float] = {}
-        self._min_interval = 0.5  # Intervalo mínimo entre reproduções (segundos)
+        self._min_interval = 0.5 # Intervalo mínimo entre reproduções (segundos)
         
         # Mapeamento de sons para seus tipos
         self._sound_types = {

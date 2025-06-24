@@ -8,6 +8,7 @@ __pycache__/
 .idea/
 *.swp
 *.swo
+.cursor/
 
 # Environment
 venv/

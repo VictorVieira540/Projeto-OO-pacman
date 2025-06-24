@@ -56,7 +56,7 @@ class Game:
             y=player_pos.y, 
             color=(255, 255, 0), 
             size=sprite_manager.sprite_size,  # Usa tamanho do sprite
-            speed=2,  # Aumentado de 2 para 4
+            speed=2,  
             lives=3
         )
         

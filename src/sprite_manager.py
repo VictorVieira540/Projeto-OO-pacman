@@ -35,7 +35,7 @@ class SpriteManager:
     def _load_all_sprites(self):
         """Carrega todos os sprites do jogo"""
         # Usa a pasta organized que tem todos os sprites
-        assets_path = "assets/sprites/organized"
+        assets_path = "assets/sprites"
         
         # Sprites do Pac-Man
         pacman_path = f"{assets_path}/pacman"
@@ -80,6 +80,9 @@ class SpriteManager:
             'white_2': self._load_sprite(f"{vulnerable_path}/vulnerable-white-2.png")
         }
         
+        # Sprite de fruta para power-up
+        self._sprites['fruit'] = self._load_sprite(f"{assets_path}/itens/fruit.png")
+        
         # Sprites de pellets (criar proceduralmente)
         self._sprites['pellet'] = {
             'normal': self._create_pellet_sprite(2, (255, 255, 255)),
@@ -96,13 +99,8 @@ class SpriteManager:
         return sprite
     
     def _create_power_up_sprite(self):
-        """Cria sprite de power-up proceduralmente"""
-        sprite = pygame.Surface((self._sprite_size, self._sprite_size), pygame.SRCALPHA)
-        # Power-up como quadrado maior
-        margin = 2
-        rect = pygame.Rect(margin, margin, self._sprite_size - 2*margin, self._sprite_size - 2*margin)
-        pygame.draw.rect(sprite, (255, 255, 255), rect)
-        return sprite
+        """Cria sprite de power-up usando o sprite de fruta"""
+        return self._sprites.get('fruit', self._create_default_sprite())
     
     def get_pacman_sprite(self, direction, animation_frame):
         """Retorna sprite do Pac-Man baseado na direção e frame de animação"""
