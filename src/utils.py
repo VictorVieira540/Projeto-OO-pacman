@@ -9,14 +9,13 @@ class Direction(Enum):
     NONE = (0, 0)
 
 class GameState(Enum):
-    MENU = 0 #Estado inicial do jogo
-    PLAYING = 1 #Estado em que o jogo está sendo jogado
-    GAME_OVER = 2 #Estado em que o jogo termina
-    PAUSED = 3 #Estado em que o jogo está pausado
-    VICTORY = 4 #Estado em que o jogador vence
-    INTERMISSION = 5 #estado em que o jogo está em pausa entre fases
-    MENU_OPTIONS = 6 
-    HISTORY = 7 #historico de pontuações
+    MENU = 0
+    PLAYING = 1
+    GAME_OVER = 2
+    PAUSED = 3
+    VICTORY = 4
+    OPTIONS = 5
+    HISTORY = 6
 
 class Vector2D: #classe que representa um vetor 2D
     def __init__(self, x, y):
