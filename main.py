@@ -89,9 +89,14 @@ class Game:
 
     def _initialize_game(self):
         """Inicializa os objetos do jogo"""
-        # Mapa - agora usa automaticamente o tamanho dos sprites
-        self._map = Map()
-        self._map.load_default_map()
+        # Mapa - cria novo ou reseta existente
+        if hasattr(self, '_map') and self._map is not None:
+            # Se já existe um mapa, reseta para estado inicial
+            self._map.reset_map()
+        else:
+            # Cria novo mapa
+            self._map = Map()
+            self._map.load_default_map()
         
         # Jogador
         player_pos = self._map.get_spawn_position("player")
@@ -126,7 +131,7 @@ class Game:
             )
             self._ghosts.append(ghost)
         
-        # Pellets
+        # Pellets - recria a partir do mapa resetado
         self._pellets = []
         pellet_data = self._map.get_pellets()
         for pellet_info in pellet_data:
@@ -144,13 +149,22 @@ class Game:
         self._game_start_time = pygame.time.get_ticks()
 
     def _reset_game(self):
-        """Reinicia o jogo"""
+        """Reinicia o jogo completamente"""
         # Para todos os sons
         sound_manager.stop_all_sounds()
+        
+        # Reseta variáveis de estado relacionadas a input/save
+        self._input_active = False
+        self._player_name = ""
+        self._show_save_confirmation = False
+        self._save_confirmation_timer = 0
+        
+        # Reinicializa o jogo
         self._initialize_game()
         self._state = GameState.PLAYING
+        
         # Inicia música do jogo
-        sound_manager.play_sound("music_menu")
+        sound_manager.play_sound("start-music")
 
     def _reset_positions(self):
         """Reinicia posições após morte"""
@@ -188,8 +202,8 @@ class Game:
                         self._selected_option = (self._selected_option + 1) % len(self._menu_options)
                     elif event.key == pygame.K_RETURN:
                         if self._selected_option == 0:
-                            self._state = GameState.PLAYING
-                            sound_manager.play_sound("start-music")
+                            # Força reset completo do jogo antes de iniciar
+                            self._reset_game()
                         elif self._selected_option == 1:
                             self._state = GameState.OPTIONS
                         elif self._selected_option == 2:
@@ -353,18 +367,13 @@ class Game:
                 sound_manager.play_sound("music_menu")
             return  # Não precisa atualizar o resto
 
-        # Ativa input de nome ao entrar em VICTORY
-        if self._state == GameState.VICTORY and not self._input_active and not self._show_save_confirmation:
+        # Ativa input de nome ao entrar em VICTORY ou GAME_OVER
+        if (self._state == GameState.VICTORY or self._state == GameState.GAME_OVER) and not self._input_active and not self._show_save_confirmation:
             self._input_active = True
             self._player_name = ""
 
         if self._state != GameState.PLAYING:
             return
-            
-        # Debug: Estado do jogo
-        print(f"Estado do jogo: {self._state}")
-        print(f"Posição do jogador: {self._player.position}")
-        print(f"Pellets restantes: {len(self._pellets)}")
         
         # Atualiza player
         self._player.update(delta_time, self._map)

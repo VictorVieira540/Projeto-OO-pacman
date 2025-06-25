@@ -153,3 +153,7 @@ class Map:
                 if cell in [2, 3]:  # Pellet normal ou power-up
                     count += 1
         return count 
+    
+    def reset_map(self):
+        """Reseta o mapa para o estado inicial, restaurando todos os pellets"""
+        self.load_default_map()
