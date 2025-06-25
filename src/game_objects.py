@@ -83,7 +83,7 @@ class MovableObject(GameObject):
         else:
             raise TypeError("A direção deve ser um enum Direction ou uma tupla (x, y)")
 
-    def can_move(self, direction, game_map):
+    def can_move(self, direction, game_map, entity_type=None):
         """Verifica se pode se mover na direção especificada"""
         if direction == Direction.NONE:
             return False
@@ -94,8 +94,12 @@ class MovableObject(GameObject):
             self._position.y + direction.value[1] * self._speed
         )
         
-        # Verifica colisão com paredes usando o tamanho do sprite
-        return game_map.is_valid_position(next_pos, sprite_manager.sprite_size)
+        # Determina o tipo da entidade se não foi fornecido
+        if entity_type is None:
+            entity_type = "default"
+        
+        # Verifica colisão com paredes usando o tamanho do sprite e tipo específico
+        return game_map.is_valid_position(next_pos, sprite_manager.sprite_size, entity_type)
 
     def move(self, direction=None):
         """Move o objeto na direção especificada"""
@@ -116,6 +120,10 @@ class Player(MovableObject):
         self._power_up_active = False
         self._power_up_timer = 0
         self._power_up_duration = 5000  # 5 segundos em millisegundos
+
+    def can_move(self, direction, game_map, entity_type=None):
+        """Sobrescreve para definir tipo como 'player'"""
+        return super().can_move(direction, game_map, "player")
 
     @property
     def lives(self):
@@ -215,6 +223,10 @@ class Ghost(MovableObject):
         self._original_color = color
         self._last_direction = Direction.NONE
         self._personality_timer = 0  # Timer para comportamentos específicos
+
+    def can_move(self, direction, game_map, entity_type=None):
+        """Sobrescreve para definir tipo como 'ghost'"""
+        return super().can_move(direction, game_map, "ghost")
 
     @property
     def state(self):

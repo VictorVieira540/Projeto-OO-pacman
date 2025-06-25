@@ -118,10 +118,33 @@ class Map:
         # Retorna True se for parede (1)
         return self._layout[row][col] == 1
 
-    def is_valid_position(self, position: Vector2D, object_size=16):
-        """Verifica se uma posição é válida considerando o tamanho do objeto"""
-        # Verifica os 4 cantos do objeto com uma margem menor
-        half_size = object_size // 2.25  
+    def is_valid_position(self, position: Vector2D, object_size=16, type="player"):
+        """
+        Verifica se uma posição é válida considerando o tamanho do objeto
+        
+        Args:
+            position: Posição a ser verificada
+            object_size: Tamanho do sprite (geralmente 16px)
+            type: Tipo da entidade ("player", "ghost" ou "default")
+        
+        Returns:
+            bool: True se a posição for válida (sem colisão com paredes)
+        """
+        # Define diferentes margens para diferentes tipos de entidades
+        # Margens menores = controle mais preciso, mas mais difícil passar por espaços apertados
+        # Margens maiores = controle mais fluido, mas pode causar colisões aparentemente incorretas
+        if type == "player":
+            # Player tem margem mais apertada para movimento mais preciso e controle responsivo
+            # Permite ao jogador navegar por corredores estreitos com mais facilidade
+            half_size = object_size // 2.25  # ~6.15px para sprite de 16px
+        elif type == "ghost":
+            # Fantasmas têm margem ligeiramente mais generosa para movimento mais fluido
+            # Evita que os fantasmas fiquem "presos" em situações de pathfinding
+            half_size = object_size // 3  # ~6.67px para sprite de 16px
+        else:
+            # Default para outros objetos (pellets, itens especiais, etc.)
+            half_size = object_size //3  # ~6.4px para sprite de 16px
+        
         corners = [
             Vector2D(position.x - half_size, position.y - half_size),
             Vector2D(position.x + half_size, position.y - half_size),
