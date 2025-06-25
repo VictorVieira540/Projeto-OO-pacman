@@ -8,8 +8,16 @@
     "score": 12850
   },
   {
+    "name": "11",
+    "score": 12720
+  },
+  {
     "name": "MazeRunner",
     "score": 11230
+  },
+  {
+    "name": "111",
+    "score": 11120
   },
   {
     "name": "DotCollector",
@@ -30,13 +38,5 @@
   {
     "name": "PelletPro",
     "score": 5670
-  },
-  {
-    "name": "ArcadeAce",
-    "score": 4450
-  },
-  {
-    "name": "GameGuru",
-    "score": 3980
   }
 ]

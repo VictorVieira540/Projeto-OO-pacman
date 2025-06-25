@@ -74,6 +74,15 @@ class Game:
         self._show_save_confirmation = False
         self._save_confirmation_timer = 0
         
+        # Sistema de campanha através dos mapas
+        self._available_maps = []
+        self._current_map_index = 0
+        self._campaign_total_score = 0
+        self._intermission_timer = 0
+        self._intermission_duration = 3000  # 3 segundos
+        self._next_map_info = None
+        
+        self._initialize_campaign()
         self._initialize_game()
 
     def _initialize_sound_system(self):
@@ -87,16 +96,72 @@ class Game:
         # Inicia música de fundo
         sound_manager.play_sound("music_menu")
 
+    def _initialize_campaign(self):
+        """Inicializa o sistema de campanha carregando todos os mapas disponíveis"""
+        from src.map import Map
+        self._available_maps = Map.get_available_maps()
+        self._current_map_index = 0
+        self._campaign_total_score = 0
+        
+        print(f"Campanha inicializada com {len(self._available_maps)} mapas:")
+        for i, map_info in enumerate(self._available_maps):
+            difficulty_label = self._get_difficulty_label(map_info['difficulty'])
+            print(f"  {i+1}. {map_info['name']} - {map_info['difficulty']}/200 ({difficulty_label})")
+
+    def _get_difficulty_label(self, difficulty):
+        """Converte valor de dificuldade para label"""
+        if difficulty >= 175:
+            return "EXTREMO"
+        elif difficulty >= 150:
+            return "MUITO DIFÍCIL"
+        elif difficulty >= 125:
+            return "DIFÍCIL+"
+        elif difficulty >= 100:
+            return "DIFÍCIL"
+        elif difficulty >= 75:
+            return "MÉDIO+"
+        elif difficulty >= 50:
+            return "MÉDIO"
+        elif difficulty >= 25:
+            return "FÁCIL+"
+        else:
+            return "MUITO FÁCIL"
+
+    def _get_difficulty_color(self, difficulty):
+        """Retorna cor baseada na dificuldade"""
+        if difficulty >= 175:
+            return (150, 0, 0)      # Vermelho escuro - EXTREMO
+        elif difficulty >= 150:
+            return (200, 0, 0)      # Vermelho - Muito difícil
+        elif difficulty >= 125:
+            return (255, 50, 50)    # Vermelho claro - Difícil+
+        elif difficulty >= 100:
+            return (255, 100, 0)    # Laranja avermelhado - Difícil
+        elif difficulty >= 75:
+            return (255, 150, 50)   # Laranja - Médio+
+        elif difficulty >= 50:
+            return (255, 255, 50)   # Amarelo - Médio
+        elif difficulty >= 25:
+            return (150, 255, 150)  # Verde claro - Fácil+
+        else:
+            return (100, 255, 100)  # Verde - Muito fácil
+
     def _initialize_game(self):
         """Inicializa os objetos do jogo"""
-        # Mapa - cria novo ou reseta existente
-        if hasattr(self, '_map') and self._map is not None:
-            # Se já existe um mapa, reseta para estado inicial
-            self._map.reset_map()
+        # Mapa - carrega o mapa atual da campanha
+        current_map_path = None
+        if self._available_maps and self._current_map_index < len(self._available_maps):
+            current_map_path = self._available_maps[self._current_map_index]['file_path']
+        
+        if hasattr(self, '_map') and self._map is not None and current_map_path:
+            # Carrega novo mapa da campanha
+            self._map = Map(map_file_path=current_map_path)
+        elif current_map_path:
+            # Cria mapa com arquivo específico da campanha
+            self._map = Map(map_file_path=current_map_path)
         else:
-            # Cria novo mapa
+            # Fallback para mapa padrão
             self._map = Map()
-            self._map.load_default_map()
         
         # Jogador
         player_pos = self._map.get_spawn_position("player")
@@ -106,7 +171,7 @@ class Game:
             color=(255, 255, 0), 
             size=sprite_manager.sprite_size,  # Usa tamanho do sprite
             speed=2,  
-            lives=1
+            lives=20
         )
         
         # Fantasmas
@@ -147,6 +212,15 @@ class Game:
         
         self._total_pellets = len(self._pellets)
         self._game_start_time = pygame.time.get_ticks()
+        
+        # Define dificuldade dos fantasmas baseada no mapa (NOVO SISTEMA!)
+        map_difficulty = self._map.difficulty
+        for ghost in self._ghosts:
+            ghost.set_difficulty(map_difficulty)
+        
+        print(f"Mapa carregado: {self._map.metadata.get('name', 'Sem nome')}")
+        print(f"Dificuldade do mapa: {map_difficulty}/200 ({map_difficulty/2}%)")
+        print(f"Pellets no mapa: {len(self._pellets)}")
 
     def _reset_game(self):
         """Reinicia o jogo completamente"""
@@ -159,8 +233,15 @@ class Game:
         self._show_save_confirmation = False
         self._save_confirmation_timer = 0
         
+        # Reseta campanha para o primeiro mapa
+        self._current_map_index = 0
+        self._campaign_total_score = 0
+        
         # Reinicializa o jogo
         self._initialize_game()
+        
+        # A dificuldade agora é fixa baseada no mapa - não precisa resetar
+        
         self._state = GameState.PLAYING
         
         # Inicia música do jogo
@@ -173,6 +254,8 @@ class Game:
         
         for ghost in self._ghosts:
             ghost.reset_position()
+
+    # Métodos de dificuldade progressiva removidos - agora dificuldade é fixa por mapa
 
     @property
     def state(self):
@@ -328,7 +411,8 @@ class Game:
                     if self._input_active:
                         if event.key == pygame.K_RETURN:
                             if self._player_name.strip():
-                                self._highscore_manager.add_score(self._player_name.strip(), self._player.score)
+                                # Salva pontuação total da campanha
+                                self._highscore_manager.add_score(self._player_name.strip(), self._campaign_total_score)
                                 self._input_active = False
                                 self._show_save_confirmation = True
                                 self._save_confirmation_timer = pygame.time.get_ticks()
@@ -348,7 +432,11 @@ class Game:
                         return True
                 elif self._state == GameState.INTERMISSION:
                     if event.key == pygame.K_RETURN:
-                        self._reset_game()
+                        # Pula a intermissão e carrega próximo mapa imediatamente
+                        self._initialize_game()
+                        self._state = GameState.PLAYING
+                        sound_manager.stop_all_sounds()
+                        sound_manager.play_sound("start-music")
                     elif event.key == pygame.K_ESCAPE:
                         self._state = GameState.MENU
                         # Para todos os sons e volta para música do menu
@@ -367,86 +455,122 @@ class Game:
                 sound_manager.play_sound("music_menu")
             return  # Não precisa atualizar o resto
 
+        # Gerencia estado de intermissão (transição entre mapas)
+        if self._state == GameState.INTERMISSION:
+            current_time = pygame.time.get_ticks()
+            if current_time - self._intermission_timer >= self._intermission_duration:
+                # Tempo de intermissão acabou - carrega próximo mapa
+                self._initialize_game()
+                self._state = GameState.PLAYING
+                sound_manager.play_sound("start-music")
+                return
+
         # Ativa input de nome ao entrar em VICTORY ou GAME_OVER
         if (self._state == GameState.VICTORY or self._state == GameState.GAME_OVER) and not self._input_active and not self._show_save_confirmation:
             self._input_active = True
             self._player_name = ""
 
-        if self._state != GameState.PLAYING:
+        if self._state not in [GameState.PLAYING, GameState.INTERMISSION]:
             return
         
-        # Atualiza player
-        self._player.update(delta_time, self._map)
-        
-        # Atualiza fantasmas
-        for ghost in self._ghosts:
-            ghost.update(delta_time, self._player.position, self._player.direction, self._map, self._ghosts)
-        
-        # Colisão com pellets
-        pellets_to_remove = []
-        for pellet in self._pellets:
-            distance = self._player.position.distance_to(pellet.position)
-            collision_radius = sprite_manager.sprite_size // 2
-            if distance < collision_radius:
-                # Come o pellet
-                points = pellet.be_eaten()
-                self._player.eat_pellet(points)
-                
-                # Remove pellet do mapa
-                self._map.remove_pellet_at(pellet.position)
-                
-                # Ativa power-up se necessário
-                if pellet.type == "power_up":
-                    self._player.activate_power_up()
-                    # Torna todos os fantasmas vulneráveis
-                    for ghost in self._ghosts:
-                        ghost.set_vulnerable(8000)  # 8 segundos
-                    # Toca som de power-up
-                    sound_manager.play_sound("ghost-turn-to-blue")
-                else:
-                    # Toca som de comer pellet
-                    sound_manager.play_sound("eating")
-                
-                pellets_to_remove.append(pellet)
-        
-        # Remove pellets comidos
-        for pellet in pellets_to_remove:
-            self._pellets.remove(pellet)
-        
-        # Verifica vitória
-        if len(self._pellets) == 0:
-            self._state = GameState.VICTORY
-            # Toca música de vitória
-            sound_manager.stop_all_sounds()
-            sound_manager.play_sound("credit")
-            return
-        
-        # Colisão com fantasmas
-        for ghost in self._ghosts:
-            distance = self._player.position.distance_to(ghost.position)
-            collision_radius = sprite_manager.sprite_size // 2
-            if distance < collision_radius:
-                if ghost.state == "vulnerable":
-                    # Come o fantasma
-                    self._player.eat_pellet(200)
-                    ghost.reset_position()
-                    # Toca som de comer fantasma
-                    sound_manager.play_sound("eating-ghost")
-                elif ghost.state == "normal":
-                    # Perde vida
-                    self._player.lose_life()
-                    # Toca som de morte
-                    sound_manager.play_sound("miss")
+        # Toda a lógica de gameplay apenas executa durante PLAYING
+        if self._state == GameState.PLAYING:
+            # Atualiza player
+            self._player.update(delta_time, self._map)
+            
+            # Atualiza fantasmas
+            for ghost in self._ghosts:
+                ghost.update(delta_time, self._player.position, self._player.direction, self._map, self._ghosts)
+            
+            # Colisão com pellets
+            pellets_to_remove = []
+            for pellet in self._pellets:
+                distance = self._player.position.distance_to(pellet.position)
+                collision_radius = sprite_manager.sprite_size // 2
+                if distance < collision_radius:
+                    # Come o pellet
+                    points = pellet.be_eaten()
+                    self._player.eat_pellet(points)
                     
-                    if self._player.lives <= 0:
-                        self._set_game_over()
-                        sound_manager.stop_all_sounds()
-                        sound_manager.play_sound("miss")
+                    # Remove pellet do mapa
+                    self._map.remove_pellet_at(pellet.position)
+                    
+                    # Ativa power-up se necessário
+                    if pellet.type == "power_up":
+                        self._player.activate_power_up()
+                        # Torna todos os fantasmas vulneráveis com duração ajustada pela dificuldade
+                        for ghost in self._ghosts:
+                            ghost.set_vulnerable(8000)  # Duração será ajustada automaticamente pela dificuldade
+                        # Toca som de power-up
+                        sound_manager.play_sound("ghost-turn-to-blue")
                     else:
-                        # Reinicia posições
-                        self._reset_positions()
-                        # Pequena pausa
-                        pygame.time.wait(1000)
+                        # Toca som de comer pellet
+                        sound_manager.play_sound("eating")
+                    
+                    pellets_to_remove.append(pellet)
+            
+            # Remove pellets comidos
+            for pellet in pellets_to_remove:
+                self._pellets.remove(pellet)
+            
+            # Verifica vitória
+            if len(self._pellets) == 0:
+                # Adiciona pontuação atual ao total da campanha
+                self._campaign_total_score += self._player.score
+                
+                # Verifica se há próximo mapa na campanha
+                if self._current_map_index + 1 < len(self._available_maps):
+                    # Há próximo mapa - vai para intermissão
+                    self._current_map_index += 1
+                    self._next_map_info = self._available_maps[self._current_map_index]
+                    self._state = GameState.INTERMISSION
+                    self._intermission_timer = pygame.time.get_ticks()
+                    
+                    # Toca som de vitória do mapa
+                    sound_manager.stop_all_sounds()
+                    sound_manager.play_sound("extend")
+                    
+                    print(f"✅ Mapa completado! Avançando para: {self._next_map_info['name']}")
+                else:
+                    # Último mapa - campanha completa!
+                    self._state = GameState.VICTORY
+                    # Toca música de vitória da campanha
+                    sound_manager.stop_all_sounds()
+                    sound_manager.play_sound("credit")
+                    
+                    print(f"CAMPANHA COMPLETA! Pontuação total: {self._campaign_total_score}")
+                return
+            
+            # Colisão com fantasmas
+            for ghost in self._ghosts:
+                distance = self._player.position.distance_to(ghost.position)
+                collision_radius = sprite_manager.sprite_size // 2
+                if distance < collision_radius:
+                    if ghost.state == "vulnerable":
+                        # Come o fantasma
+                        self._player.eat_pellet(200)
+                        # Usa novo método com delay de 5 segundos
+                        ghost.set_eaten_with_delay()
+                        # Toca som de comer fantasma
+                        sound_manager.play_sound("eating-ghost")
+                    elif ghost.state == "normal":
+                        # Perde vida
+                        self._player.lose_life()
+                        # Toca som de morte
+                        sound_manager.play_sound("miss")
+                        
+                        if self._player.lives <= 0:
+                            self._set_game_over()
+                            sound_manager.stop_all_sounds()
+                            sound_manager.play_sound("miss")
+                        else:
+                            # Reinicia posições
+                            self._reset_positions()
+                            # Pequena pausa
+                            pygame.time.wait(1000)
+        elif self._state == GameState.INTERMISSION:
+            # Durante intermissão, não executa lógica de gameplay
+            return
 
     def _draw_text_centered(self, text, font, color, y_offset=0):
         """Desenha texto centralizado na tela"""
@@ -471,11 +595,80 @@ class Game:
         pellets_rect = pellets_text.get_rect(center=(self._width // 2, self._hud_y_start + 25))
         self._screen.blit(pellets_text, pellets_rect)
         
+        # Indicador de dificuldade do mapa (esquerda, segunda linha) - SISTEMA FIXO POR MAPA!
+        if hasattr(self, '_map') and self._map is not None:
+            map_difficulty = self._map.difficulty
+            difficulty_color = (255, 255, 255)
+            difficulty_label = "FÁCIL"
+            
+            # Muda cor e label baseado na dificuldade do mapa (0-200)
+            if map_difficulty >= 175:
+                difficulty_color = (150, 0, 0)      # Vermelho escuro - EXTREMO
+                difficulty_label = "EXTREMO"
+            elif map_difficulty >= 150:
+                difficulty_color = (200, 0, 0)      # Vermelho - Muito difícil
+                difficulty_label = "MUITO DIFÍCIL" 
+            elif map_difficulty >= 125:
+                difficulty_color = (255, 50, 50)    # Vermelho claro - Difícil+
+                difficulty_label = "DIFÍCIL+"
+            elif map_difficulty >= 100:
+                difficulty_color = (255, 100, 0)    # Laranja avermelhado - Difícil
+                difficulty_label = "DIFÍCIL"
+            elif map_difficulty >= 75:
+                difficulty_color = (255, 150, 50)   # Laranja - Médio+
+                difficulty_label = "MÉDIO+"
+            elif map_difficulty >= 50:
+                difficulty_color = (255, 255, 50)   # Amarelo - Médio
+                difficulty_label = "MÉDIO"
+            elif map_difficulty >= 25:
+                difficulty_color = (150, 255, 150)  # Verde claro - Fácil+
+                difficulty_label = "FÁCIL+"
+            else:
+                difficulty_color = (100, 255, 100)  # Verde - Muito fácil
+                difficulty_label = "MUITO FÁCIL"
+            
+            difficulty_text = self._font_small.render(f"Dificuldade:{difficulty_label}", True, difficulty_color)
+            self._screen.blit(difficulty_text, (10, self._hud_y_start + 25))
+        
+        # Progresso da campanha (direita, segunda linha)
+        if hasattr(self, '_available_maps') and self._available_maps:
+            current_map = self._current_map_index + 1
+            total_maps = len(self._available_maps)
+            campaign_text = self._font_small.render(f"Mapa: {current_map}/{total_maps}", True, (200, 200, 255))
+            campaign_rect = campaign_text.get_rect(topright=(self._width - 10, self._hud_y_start + 25))
+            self._screen.blit(campaign_text, campaign_rect)
+            
+            # Nome do mapa atual (centro, acima dos pellets)
+            if self._current_map_index < len(self._available_maps):
+                map_name = self._available_maps[self._current_map_index]['name']
+                # Trunca o nome se for muito longo
+                if len(map_name) > 20:
+                    map_name = map_name[:17] + "..."
+                map_name_text = self._font_small.render(map_name, True, (150, 150, 255))
+                map_name_rect = map_name_text.get_rect(center=(self._width // 2, self._hud_y_start - 40))
+                self._screen.blit(map_name_text, map_name_rect)
+        
         # Indicador de power-up (centro, acima dos pellets)
         if self._player.power_up_active:
             power_text = self._font_small.render("POWER-UP ATIVO!", True, (255, 255, 0))
             power_rect = power_text.get_rect(center=(self._width // 2, self._hud_y_start - 20))
             self._screen.blit(power_text, power_rect)
+        
+        # Indicador de fantasmas em delay (canto inferior direito)
+        ghosts_in_delay = [ghost for ghost in self._ghosts if ghost.is_in_spawn_delay]
+        if ghosts_in_delay:
+            delay_info = []
+            for ghost in ghosts_in_delay:
+                remaining = ghost.spawn_delay_remaining
+                delay_info.append(f"{ghost._ghost_type.capitalize()}: {remaining:.1f}s")
+            
+            delay_text = "Fantasmas em delay:"
+            delay_surface = self._font_small.render(delay_text, True, (255, 150, 150))
+            self._screen.blit(delay_surface, (self._width - 180, self._hud_y_start + 50))
+            
+            for i, info in enumerate(delay_info):
+                info_surface = self._font_small.render(info, True, (255, 200, 200))
+                self._screen.blit(info_surface, (self._width - 180, self._hud_y_start + 70 + i * 15))
 
     def render(self):
         """Renderiza a tela"""
@@ -609,25 +802,104 @@ class Game:
                 self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 55)
             
         elif self._state == GameState.VICTORY:
-            # Tela de vitória
-            self._draw_text_centered("VITÓRIA!", self._font_large, (0, 255, 0), -80)
-            self._draw_text_centered(f"Pontuação Final: {self._player.score}", self._font_medium, (255, 255, 255), -40)
-            self._draw_text_centered("Todos os pellets foram coletados!", self._font_small, (255, 255, 255), -10)
+            # Tela de vitória da campanha
+            self._draw_text_centered("CAMPANHA COMPLETA!", self._font_large, (255, 215, 0), -100)
+            
+            # Estatísticas da campanha
+            total_maps = len(self._available_maps)
+            self._draw_text_centered(f"Mapas Completados: {total_maps}/{total_maps}", 
+                                   self._font_medium, (0, 255, 0), -60)
+            self._draw_text_centered(f"Pontuação Total: {self._campaign_total_score}", 
+                                   self._font_medium, (255, 255, 0), -30)
+            
+            # Média por mapa
+            if total_maps > 0:
+                average_score = self._campaign_total_score // total_maps
+                self._draw_text_centered(f"Média por Mapa: {average_score}", 
+                                       self._font_small, (200, 200, 200), 0)
+            
+            # Mensagem de parabéns
+            self._draw_text_centered("Parabéns! Você dominou todos os mapas!", 
+                                   self._font_small, (255, 255, 255), 30)
+            
             if self._input_active:
-                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 30)
+                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 60)
                 name_surface = self._font_medium.render(self._player_name + "|", True, (255, 255, 255))
-                name_rect = name_surface.get_rect(center=(self._width // 2, self._height // 2 + 70))
+                name_rect = name_surface.get_rect(center=(self._width // 2, self._height // 2 + 100))
                 self._screen.blit(name_surface, name_rect)
             elif self._show_save_confirmation:
-                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 30)
+                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 60)
             else:
-                self._draw_text_centered("ENTER - Jogar Novamente", self._font_small, (255, 255, 255), 30)
-                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 55)
+                self._draw_text_centered("ENTER - Nova Campanha", self._font_small, (255, 255, 255), 60)
+                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 85)
         
         elif self._state == GameState.INTERMISSION:
-            # Tela de intermissão
-            self._draw_text_centered("INTERMISSÃO", self._font_large, (255, 255, 255), -50)
-            self._draw_text_centered("Carregando...", self._font_small, (255, 255, 255), 50)
+            # Tela de intermissão (transição entre mapas)
+            self._draw_text_centered("MAPA COMPLETADO!", self._font_large, (0, 255, 0), -120)
+            
+            # Informações da campanha
+            current_map = self._current_map_index 
+            total_maps = len(self._available_maps)
+            self._draw_text_centered(f"Progresso da Campanha: {current_map}/{total_maps}", 
+                                   self._font_medium, (255, 255, 255), -80)
+            
+            # Pontuação total
+            self._draw_text_centered(f"Pontuação Total: {self._campaign_total_score}", 
+                                   self._font_small, (255, 255, 0), -50)
+            
+            # Informações do próximo mapa
+            if self._next_map_info:
+                self._draw_text_centered("PRÓXIMO MAPA:", self._font_medium, (255, 255, 255), -10)
+                self._draw_text_centered(f"{self._next_map_info['name']}", 
+                                       self._font_medium, (255, 255, 0), 15)
+                
+                difficulty_label = self._get_difficulty_label(self._next_map_info['difficulty'])
+                difficulty_color = self._get_difficulty_color(self._next_map_info['difficulty'])
+                self._draw_text_centered(f"Dificuldade: {difficulty_label}", 
+                                       self._font_small, difficulty_color, 40)
+                
+                # Tamanho do mapa
+                self._draw_text_centered(f"Tamanho: {self._next_map_info['width']}x{self._next_map_info['height']}", 
+                                       self._font_small, (200, 200, 200), 60)
+                
+                # Descrição se houver
+                if self._next_map_info.get('description'):
+                    self._draw_text_centered(f"'{self._next_map_info['description']}'", 
+                                           self._font_small, (150, 150, 150), 80)
+            
+            # Barra de progresso do countdown
+            current_time = pygame.time.get_ticks()
+            elapsed = current_time - self._intermission_timer
+            progress = min(elapsed / self._intermission_duration, 1.0)
+            remaining_time = max(0, (self._intermission_duration - elapsed) / 1000.0)
+            
+            # Texto do countdown
+            self._draw_text_centered(f"Carregando em {remaining_time:.1f}s", 
+                                   self._font_small, (255, 255, 255), 110)
+            
+            # Barra de progresso visual
+            bar_width = 300
+            bar_height = 10
+            bar_x = (self._width - bar_width) // 2
+            bar_y = self._height // 2 + 140
+            
+            # Fundo da barra
+            pygame.draw.rect(self._screen, (50, 50, 50), 
+                           (bar_x, bar_y, bar_width, bar_height))
+            
+            # Progresso da barra
+            progress_width = int(bar_width * progress)
+            if progress_width > 0:
+                pygame.draw.rect(self._screen, (0, 255, 0), 
+                               (bar_x, bar_y, progress_width, bar_height))
+            
+            # Borda da barra
+            pygame.draw.rect(self._screen, (255, 255, 255), 
+                           (bar_x, bar_y, bar_width, bar_height), 2)
+            
+            # Instruções
+            self._draw_text_centered("ENTER - Pular | ESC - Menu", 
+                                   self._font_small, (150, 150, 150), 170)
         
         pygame.display.flip()
 
