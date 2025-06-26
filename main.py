@@ -53,6 +53,7 @@ class Game:
         self._font_large = pygame.font.Font(None, 48)
         self._font_medium = pygame.font.Font(None, 32)
         self._font_small = pygame.font.Font(None, 24)
+        self._font_tiny = pygame.font.Font(None, 22)
         
         # Inicializa o sistema de sons
         self._initialize_sound_system()
@@ -594,6 +595,9 @@ class Game:
         pellets_rect = pellets_text.get_rect(center=(self._width // 2, self._hud_y_start + 25))
         self._screen.blit(pellets_text, pellets_rect)
         
+        # Calcula a posição X do início do texto "Pellets" para alinhar a mensagem de delay
+        pellets_start_x = pellets_rect.left
+        
         # Indicador de dificuldade do mapa (esquerda, segunda linha) - SISTEMA FIXO POR MAPA!
         if hasattr(self, '_map') and self._map is not None:
             map_difficulty = self._map.difficulty
@@ -653,21 +657,18 @@ class Game:
             power_rect = power_text.get_rect(center=(self._width // 2, self._hud_y_start - 20))
             self._screen.blit(power_text, power_rect)
         
-        # Indicador de fantasmas em delay (canto inferior direito)
+        # Indicador de fantasmas em delay (minutagem na mesma linha da mensagem)
         ghosts_in_delay = [ghost for ghost in self._ghosts if ghost.is_in_spawn_delay]
         if ghosts_in_delay:
             delay_info = []
             for ghost in ghosts_in_delay:
                 remaining = ghost.spawn_delay_remaining
-                delay_info.append(f"{ghost._ghost_type.capitalize()}: {remaining:.1f}s")
+                delay_info.append(f"{ghost._ghost_type.capitalize()}:{remaining:.1f}s")
             
-            delay_text = "Fantasmas em delay:"
-            delay_surface = self._font_small.render(delay_text, True, (255, 150, 150))
-            self._screen.blit(delay_surface, (self._width - 180, self._hud_y_start + 50))
-            
-            for i, info in enumerate(delay_info):
-                info_surface = self._font_small.render(info, True, (255, 200, 200))
-                self._screen.blit(info_surface, (self._width - 180, self._hud_y_start + 70 + i * 15))
+            # Combina a mensagem com a minutagem na mesma linha
+            delay_text = "Fantasmas em delay: " + ", ".join(delay_info)
+            delay_surface = self._font_small.render(delay_text, True, (220, 0, 0))
+            self._screen.blit(delay_surface, (pellets_start_x, self._hud_y_start + 45))
 
     def render(self):
         """Renderiza a tela"""

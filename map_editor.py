@@ -82,7 +82,7 @@ class MapEditor:
         # Metadados do mapa
         self.map_metadata = {
             "name": "Novo Mapa",
-            "difficulty": 50,
+            "difficulty": 200,
             "description": "Mapa criado no editor"
         }
         
@@ -271,7 +271,7 @@ class MapEditor:
                         defaultextension=".json",
                         filetypes=[("JSON files", "*.json")],
                         initialdir="assets/maps/",
-                        initialvalue=suggested_name
+                        initialfile=suggested_name
                     )
             else:
                 # Novo mapa - sempre pedir local
