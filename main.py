@@ -216,11 +216,20 @@ class Game:
         
         # Define dificuldade dos fantasmas baseada no mapa (NOVO SISTEMA!)
         map_difficulty = self._map.difficulty
+        # Garante que map_difficulty seja um inteiro
+        if isinstance(map_difficulty, str):
+            try:
+                map_difficulty = int(map_difficulty)
+            except (ValueError, TypeError):
+                map_difficulty = 0
+        elif not isinstance(map_difficulty, int):
+            map_difficulty = 0
+            
         for ghost in self._ghosts:
             ghost.set_difficulty(map_difficulty)
         
         print(f"Mapa carregado: {self._map.metadata.get('name', 'Sem nome')}")
-        print(f"Dificuldade do mapa: {map_difficulty}/200 ({map_difficulty/2}%)")
+        print(f"Dificuldade do mapa: {map_difficulty}/200 ({map_difficulty//2}%)")
         print(f"Pellets no mapa: {len(self._pellets)}")
 
     def _reset_game(self):
@@ -601,6 +610,15 @@ class Game:
         # Indicador de dificuldade do mapa (esquerda, segunda linha) - SISTEMA FIXO POR MAPA!
         if hasattr(self, '_map') and self._map is not None:
             map_difficulty = self._map.difficulty
+            # Garante que map_difficulty seja um inteiro
+            if isinstance(map_difficulty, str):
+                try:
+                    map_difficulty = int(map_difficulty)
+                except (ValueError, TypeError):
+                    map_difficulty = 0
+            elif not isinstance(map_difficulty, int):
+                map_difficulty = 0
+                
             difficulty_color = (255, 255, 255)
             difficulty_label = "FÁCIL"
             
