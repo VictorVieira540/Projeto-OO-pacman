@@ -88,7 +88,7 @@ class Game:
     def _initialize_sound_system(self):
         """Inicializa o sistema de sons do jogo"""
         # Configura volumes iniciais
-        sound_manager.set_volume(SoundType.MUSIC, 0.5)
+        sound_manager.set_volume(SoundType.MUSIC, 0.3)
         sound_manager.set_volume(SoundType.EFFECT, 0.7)
         sound_manager.set_volume(SoundType.UI, 0.8)
         sound_manager.set_volume(SoundType.GHOST, 0.6)
@@ -170,8 +170,8 @@ class Game:
             y=player_pos.y, 
             color=(255, 255, 0), 
             size=sprite_manager.sprite_size,  # Usa tamanho do sprite
-            speed=2,  
-            lives=20
+            speed=1.7,  
+            lives=3
         )
         
         # Fantasmas
@@ -190,7 +190,7 @@ class Game:
                 y=ghost_pos.y,
                 color=config["color"],
                 size=sprite_manager.sprite_size,  # Usa tamanho do sprite
-                speed=1.5,  # Velocidade reduzida para 1.5 (era 2)
+                speed=1.5,  
                 initial_position=ghost_pos,
                 ghost_type=config["type"]
             )
@@ -245,7 +245,7 @@ class Game:
         self._state = GameState.PLAYING
         
         # Inicia música do jogo
-        sound_manager.play_sound("start-music")
+        sound_manager.play_sound("music_menu")
 
     def _reset_positions(self):
         """Reinicia posições após morte"""
@@ -255,7 +255,6 @@ class Game:
         for ghost in self._ghosts:
             ghost.reset_position()
 
-    # Métodos de dificuldade progressiva removidos - agora dificuldade é fixa por mapa
 
     @property
     def state(self):
@@ -436,7 +435,7 @@ class Game:
                         self._initialize_game()
                         self._state = GameState.PLAYING
                         sound_manager.stop_all_sounds()
-                        sound_manager.play_sound("start-music")
+                        sound_manager.play_sound("music_menu")
                     elif event.key == pygame.K_ESCAPE:
                         self._state = GameState.MENU
                         # Para todos os sons e volta para música do menu
@@ -462,7 +461,7 @@ class Game:
                 # Tempo de intermissão acabou - carrega próximo mapa
                 self._initialize_game()
                 self._state = GameState.PLAYING
-                sound_manager.play_sound("start-music")
+                sound_manager.play_sound("music_menu")
                 return
 
         # Ativa input de nome ao entrar em VICTORY ou GAME_OVER

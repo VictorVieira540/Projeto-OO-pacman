@@ -1,13 +1,14 @@
 {
   "metadata": {
-    "name": "Classic Pac-Man Map",
+    "name": "Classic Pac-Man",
     "version": "1.0",
     "author": "Sistema",
     "description": "Mapa clássico do Pac-Man com layout tradicional",
     "cell_size": 16,
     "width": 35,
     "height": 21,
-    "difficulty": 100
+    "difficulty": 100,
+    "background_music": "music_menu" 
   },
   "legend": {
     "0": "caminho_vazio",
