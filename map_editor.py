@@ -73,7 +73,7 @@ class MapEditor:
         # Grid do mapa
         self.grid = [[EMPTY for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
         
-        # Tipo de célula selecionado
+        # Tipo de célula selecionada
         self.selected_type = WALL
         
         # Estado do mouse
@@ -182,7 +182,15 @@ class MapEditor:
             font = self.font if i == 0 else self.small_font
             text = font.render(control, True, color)
             self.screen.blit(text, (ui_x, controls_y + i * 18))
-    
+
+        # --- NOVO: Mostrar coordenadas do mouse ---
+        mouse_pos = pygame.mouse.get_pos()
+        grid_x, grid_y = self.get_cell_at_pos(mouse_pos)
+        if self.is_valid_cell(grid_x, grid_y):
+            coord_text = self.small_font.render(f"Mouse: ({grid_x}, {grid_y})", True, BLACK)
+            self.screen.blit(coord_text, (ui_x, controls_y + len(controls)*18 + 20))
+        # --- FIM NOVO ---
+
     def handle_click(self, pos: Tuple[int, int], button: int):
         """Manipula cliques do mouse"""
         x, y = self.get_cell_at_pos(pos)
@@ -210,6 +218,31 @@ class MapEditor:
     def save_map(self):
         """Salva o mapa no formato JSON"""
         try:
+            # --- NOVO: Validação de spawns obrigatórios ---
+            required_spawns = {
+                "Jogador": PLAYER_SPAWN,
+                "Fantasma Vermelho": GHOST_RED,
+                "Fantasma Rosa": GHOST_PINK,
+                "Fantasma Ciano": GHOST_CYAN,
+                "Fantasma Laranja": GHOST_ORANGE
+            }
+            missing = []
+            for name, cell_type in required_spawns.items():
+                found = False
+                for y in range(GRID_HEIGHT):
+                    for x in range(GRID_WIDTH):
+                        if self.grid[y][x] == cell_type:
+                            found = True
+                            break
+                    if found:
+                        break
+                if not found:
+                    missing.append(name)
+            if missing:
+                messagebox.showerror("Erro ao salvar", f"Faltando os seguintes spawns obrigatórios:\n- " + "\n- ".join(missing))
+                return
+            # --- FIM NOVO ---
+
             filename = None
             
             # Se há um arquivo carregado, perguntar ao usuário o que fazer
@@ -527,4 +560,4 @@ if __name__ == "__main__":
     for i, name in enumerate(CELL_NAMES.values()):
         print(f"{i+1}: {name}")
     
-    editor.run() 
+    editor.run()
