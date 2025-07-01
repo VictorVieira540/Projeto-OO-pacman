@@ -7,8 +7,31 @@ class SpriteManager:
     
     def __init__(self):
         self._sprites = {}
-        self._sprite_size = 16
+        self._base_sprite_size = 16  
+        self._current_sprite_size = 16 
+        self._scale_factor = 1.0  
+        self._scaled_sprites = {}  
         self._load_all_sprites()
+    
+    def set_scale_factor(self, scale_factor):
+        """Define o fator de escala para os sprites"""
+        if scale_factor != self._scale_factor:
+            self._scale_factor = scale_factor
+            self._current_sprite_size = int(self._base_sprite_size * scale_factor)
+            self._scaled_sprites.clear()  
+            print(f"Escala de sprites alterada: {scale_factor:.2f}x (tamanho: {self._current_sprite_size}px)")
+    
+    def _get_scaled_sprite(self, sprite_key, sprite):
+        """Retorna uma versão escalada do sprite, usando cache quando possível"""
+        if self._scale_factor == 1.0:
+            return sprite
+            
+        cache_key = f"{sprite_key}_{self._scale_factor}"
+        if cache_key not in self._scaled_sprites:
+            new_size = (self._current_sprite_size, self._current_sprite_size)
+            self._scaled_sprites[cache_key] = pygame.transform.scale(sprite, new_size)
+        
+        return self._scaled_sprites[cache_key]
     
     def _load_sprite(self, path):
         """Carrega um sprite individual"""
@@ -18,9 +41,9 @@ class SpriteManager:
                 return self._create_default_sprite()
                 
             sprite = pygame.image.load(path)
-            # Redimensiona para o tamanho correto se necessário
-            if sprite.get_size() != (self._sprite_size, self._sprite_size):
-                sprite = pygame.transform.scale(sprite, (self._sprite_size, self._sprite_size))
+           
+            if sprite.get_size() != (self._base_sprite_size, self._base_sprite_size):
+                sprite = pygame.transform.scale(sprite, (self._base_sprite_size, self._base_sprite_size))
             return sprite
         except (pygame.error, FileNotFoundError) as e:
             print(f"Erro ao carregar sprite {path}: {e}")
@@ -28,13 +51,13 @@ class SpriteManager:
     
     def _create_default_sprite(self):
         """Cria um sprite padrão quando o original não é encontrado"""
-        sprite = pygame.Surface((self._sprite_size, self._sprite_size))
+        sprite = pygame.Surface((self._base_sprite_size, self._base_sprite_size))
         sprite.fill((255, 0, 255))  # Magenta para indicar sprite faltando
         return sprite
     
     def _load_all_sprites(self):
         """Carrega todos os sprites do jogo"""
-        # Usa a pasta organized que tem todos os sprites
+       
         assets_path = "assets/sprites"
         
         # Sprites do Pac-Man
@@ -93,8 +116,8 @@ class SpriteManager:
     
     def _create_pellet_sprite(self, radius, color):
         """Cria sprite de pellet proceduralmente"""
-        sprite = pygame.Surface((self._sprite_size, self._sprite_size), pygame.SRCALPHA)
-        center = self._sprite_size // 2
+        sprite = pygame.Surface((self._base_sprite_size, self._base_sprite_size), pygame.SRCALPHA)
+        center = self._base_sprite_size // 2
         pygame.draw.circle(sprite, color, (center, center), radius)
         return sprite
     
@@ -107,16 +130,24 @@ class SpriteManager:
         # Animação simples: alterna entre aberto e fechado
         is_open = (animation_frame // 10) % 2 == 0
         
+        sprite_key = None
         if direction == Direction.RIGHT:
-            return self._sprites['pacman']['right_open'] if is_open else self._sprites['pacman']['right']
+            sprite_key = 'right_open' if is_open else 'right'
+            sprite = self._sprites['pacman'][sprite_key]
         elif direction == Direction.LEFT:
-            return self._sprites['pacman']['left_open'] if is_open else self._sprites['pacman']['left']
+            sprite_key = 'left_open' if is_open else 'left'
+            sprite = self._sprites['pacman'][sprite_key]
         elif direction == Direction.UP:
-            return self._sprites['pacman']['up_open'] if is_open else self._sprites['pacman']['up']
+            sprite_key = 'up_open' if is_open else 'up'
+            sprite = self._sprites['pacman'][sprite_key]
         elif direction == Direction.DOWN:
-            return self._sprites['pacman']['down_closed'] if not is_open else self._sprites['pacman']['down']
+            sprite_key = 'down_closed' if not is_open else 'down'
+            sprite = self._sprites['pacman'][sprite_key]
         else:
-            return self._sprites['pacman']['closed']
+            sprite_key = 'closed'
+            sprite = self._sprites['pacman'][sprite_key]
+            
+        return self._get_scaled_sprite(f"pacman_{sprite_key}", sprite)
     
     def get_ghost_sprite(self, ghost_type, direction, animation_frame, state="normal"):
         """Retorna sprite do fantasma baseado no tipo, direção, frame e estado"""
@@ -124,9 +155,12 @@ class SpriteManager:
             # Animação de vulnerabilidade alternando entre azul e branco
             timer = animation_frame // 15
             if timer % 4 < 2:
-                return self._sprites['ghost_vulnerable']['blue_1'] if timer % 2 == 0 else self._sprites['ghost_vulnerable']['blue_2']
+                sprite_key = 'blue_1' if timer % 2 == 0 else 'blue_2'
+                sprite = self._sprites['ghost_vulnerable'][sprite_key]
             else:
-                return self._sprites['ghost_vulnerable']['white_1'] if timer % 2 == 0 else self._sprites['ghost_vulnerable']['white_2']
+                sprite_key = 'white_1' if timer % 2 == 0 else 'white_2'
+                sprite = self._sprites['ghost_vulnerable'][sprite_key]
+            return self._get_scaled_sprite(f"ghost_vulnerable_{sprite_key}", sprite)
         
         # Mapear types para cores corretas
         color_map = {
@@ -153,25 +187,39 @@ class SpriteManager:
         frame = '1' if (animation_frame // 20) % 2 == 0 else '2'
         
         sprite_key = f'{dir_name}_{frame}'
-        return ghost_sprites.get(sprite_key, ghost_sprites.get('up_1', self._sprites['ghost_red']['up_1']))
+        sprite = ghost_sprites.get(sprite_key, ghost_sprites.get('up_1', self._sprites['ghost_red']['up_1']))
+        
+        return self._get_scaled_sprite(f"ghost_{color}_{sprite_key}", sprite)
     
     def get_pellet_sprite(self, pellet_type, animation_frame=0):
         """Retorna sprite do pellet"""
         if pellet_type == "power_up":
             # Power-up pisca
             if (animation_frame // 15) % 2 == 0:
-                return self._sprites['pellet']['power_up']
+                sprite = self._sprites['pellet']['power_up']
+                return self._get_scaled_sprite("pellet_power_up", sprite)
             else:
                 # Retorna sprite transparente para efeito de piscar
-                transparent = pygame.Surface((self._sprite_size, self._sprite_size), pygame.SRCALPHA)
+                transparent = pygame.Surface((self._current_sprite_size, self._current_sprite_size), pygame.SRCALPHA)
                 return transparent
         else:
-            return self._sprites['pellet']['normal']
+            sprite = self._sprites['pellet']['normal']
+            return self._get_scaled_sprite("pellet_normal", sprite)
     
     @property
     def sprite_size(self):
-        """Retorna o tamanho dos sprites"""
-        return self._sprite_size
+        """Retorna o tamanho atual dos sprites (com escala aplicada)"""
+        return self._current_sprite_size
+    
+    @property
+    def base_sprite_size(self):
+        """Retorna o tamanho base dos sprites (16x16)"""
+        return self._base_sprite_size
+    
+    @property
+    def scale_factor(self):
+        """Retorna o fator de escala atual"""
+        return self._scale_factor
 
 # Instância global do gerenciador de sprites
 sprite_manager = SpriteManager() 

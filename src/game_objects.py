@@ -42,7 +42,7 @@ class GameObject(ABC):
         pass
 
     def get_rect(self):
-        sprite_size = sprite_manager.sprite_size
+        sprite_size = sprite_manager.base_sprite_size
         return pygame.Rect(
             self._position.x - sprite_size // 2,
             self._position.y - sprite_size // 2,
@@ -94,7 +94,7 @@ class MovableObject(GameObject):
         if entity_type is None:
             entity_type = "default"
         
-        return game_map.is_valid_position(next_pos, sprite_manager.sprite_size, entity_type)
+        return game_map.is_valid_position(next_pos, sprite_manager.base_sprite_size, entity_type)
 
     def move(self, direction=None):
         if direction is None:
@@ -148,18 +148,20 @@ class Player(MovableObject):
         if self._lives < 0:
             self._lives = 0
 
-    def draw(self, screen):
+    def draw(self, screen, scale_factor=1.0, offset_x=0, offset_y=0):
         sprite = sprite_manager.get_pacman_sprite(self._direction, self._animation_frame)
         
         sprite_size = sprite_manager.sprite_size
-        x = int(self._position.x - sprite_size // 2)
-        y = int(self._position.y - sprite_size // 2)
+        x = int((self._position.x - sprite_manager.base_sprite_size // 2) * scale_factor) + offset_x
+        y = int((self._position.y - sprite_manager.base_sprite_size // 2) * scale_factor) + offset_y
         
         if self._power_up_active:
-            glow_surface = pygame.Surface((sprite_size + 4, sprite_size + 4), pygame.SRCALPHA)
+            glow_size = sprite_size + int(4 * scale_factor)
+            glow_surface = pygame.Surface((glow_size, glow_size), pygame.SRCALPHA)
             glow_color = (255, 255, 100, 100) if (self._animation_frame // 5) % 2 else (255, 255, 0, 150)
-            pygame.draw.circle(glow_surface, glow_color, (sprite_size//2 + 2, sprite_size//2 + 2), sprite_size//2 + 2)
-            screen.blit(glow_surface, (x - 2, y - 2))
+            glow_radius = sprite_size//2 + int(2 * scale_factor)
+            pygame.draw.circle(glow_surface, glow_color, (glow_size//2, glow_size//2), glow_radius)
+            screen.blit(glow_surface, (x - int(2 * scale_factor), y - int(2 * scale_factor)))
         
         screen.blit(sprite, (x, y))
 
@@ -662,7 +664,7 @@ class Ghost(MovableObject):
         
         return self.choose_direction_advanced(game_map, target_position)
 
-    def draw(self, screen):
+    def draw(self, screen, scale_factor=1.0, offset_x=0, offset_y=0):
         sprite = sprite_manager.get_ghost_sprite(
             self._ghost_type, 
             self._direction, 
@@ -671,10 +673,16 @@ class Ghost(MovableObject):
         )
         
         sprite_size = sprite_manager.sprite_size
-        x = int(self._position.x - sprite_size // 2)
-        y = int(self._position.y - sprite_size // 2)
+        x = int((self._position.x - sprite_manager.base_sprite_size // 2) * scale_factor) + offset_x
+        y = int((self._position.y - sprite_manager.base_sprite_size // 2) * scale_factor) + offset_y
         
         screen.blit(sprite, (x, y))
+        
+        if self._is_in_spawn_delay:
+            overlay = pygame.Surface((sprite_size, sprite_size), pygame.SRCALPHA)
+            alpha = 80 + int(40 * abs(math.sin(pygame.time.get_ticks() * 0.01)))
+            overlay.fill((255, 255, 255, alpha))
+            screen.blit(overlay, (x, y))
 
     def update(self, delta_time, player_position=None, player_direction=None, game_map=None, other_ghosts=None):
         # Sistema de delay no spawn
@@ -772,12 +780,12 @@ class Pellet(GameObject):
     def be_eaten(self):
         return self._value
 
-    def draw(self, screen):
+    def draw(self, screen, scale_factor=1.0, offset_x=0, offset_y=0):
         sprite = sprite_manager.get_pellet_sprite(self._type, self._animation_frame)
         
         sprite_size = sprite_manager.sprite_size
-        x = int(self._position.x - sprite_size // 2)
-        y = int(self._position.y - sprite_size // 2)
+        x = int((self._position.x - sprite_manager.base_sprite_size // 2) * scale_factor) + offset_x
+        y = int((self._position.y - sprite_manager.base_sprite_size // 2) * scale_factor) + offset_y
         
         screen.blit(sprite, (x, y))
 

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Horários Editável</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilo para a fonte Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilização para as células editáveis */
+        td[contenteditable="true"] {
+            cursor: text;
+            transition: background-color 0.3s ease;
+        }
+        /* Efeito de foco para indicar qual célula está sendo editada */
+        td[contenteditable="true"]:focus {
+            background-color: #f0f9ff; /* Azul bem claro */
+            outline: 2px solid #3b82f6; /* Borda azul */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        /* Placeholder para células vazias */
+        td[contenteditable="true"]:empty::before {
+            content: " "; /* Conteúdo do placeholder, pode ser um traço ou vazio */
+            color: #9ca3af; /* Cinza claro */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <div class="w-full max-w-7xl mx-auto bg-white rounded-xl shadow-lg p-4 md:p-8">
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">Minha Grade de Horários</h1>
+        
+        <!-- Container para a tabela com rolagem horizontal em telas pequenas -->
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-center">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 md:p-3 font-semibold text-xs md:text-sm text-gray-700 border border-gray-300">Horário</th>
+                        <th class="p-2 md:p-3 font-semibold text-xs md:text-sm text-gray-700 border border-gray-300">Segunda</th>
+                        <th class="p-2 md:p-3 font-semibold text-xs md:text-sm text-gray-700 border border-gray-300">Terça</th>
+                        <th class="p-2 md:p-3 font-semibold text-xs md:text-sm text-gray-700 border border-gray-300">Quarta</th>
+                        <th class="p-2 md:p-3 font-semibold text-xs md:text-sm text-gray-700 border border-gray-300">Quinta</th>
+                        <th class="p-2 md:p-3 font-semibold text-xs md:text-sm text-gray-700 border border-gray-300">Sexta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Linhas da tabela geradas dinamicamente -->
+                    <script>
+                        const times = [
+                            "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00",
+                            "14:00", "15:00", "16:00", "17:00", "18:30", "19:00", "19:50",
+                            "21:00", "21:50"
+                        ];
+
+                        const schedule = {
+                            "14:00": { "Segunda": "SIN 213 T1", "Terça": "<span class='text-red-600 font-medium'>SIN 252 T1</span>", "Quarta": "<span class='text-gray-500'>SIN 220 T1</span>" },
+                            "15:00": { "Segunda": "SIN 213 T1", "Terça": "<span class='text-red-600 font-medium'>SIN 252 T1</span>", "Quarta": "<span class='text-gray-500'>SIN 220 T1</span>" },
+                            "16:00": { "Quarta": "SIN 213 T1", "Quinta": "<span class='text-red-600 font-medium'>SIN 252 T1</span>", "Sexta": "<span class='text-gray-500'>SIN 220 T1</span>" },
+                            "17:00": { "Quarta": "SIN 213 T1", "Quinta": "<span class='text-red-600 font-medium'>SIN 252 T1</span>", "Sexta": "<span class='text-gray-500'>SIN 220 T1</span>" },
+                            "19:00": { "Quinta": "<span class='text-green-600 font-medium'>SIN 421 T2</span>" },
+                            "19:50": { "Quinta": "<span class='text-green-600 font-medium'>SIN 421 T2</span>" },
+                            "21:00": { "Segunda": "<span class='text-green-600 font-medium'>SIN 421 T2</span>" },
+                            "21:50": { "Segunda": "<span class='text-green-600 font-medium'>SIN 421 T2</span>" }
+                        };
+
+                        const days = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
+                        const tableBody = document.querySelector('tbody');
+
+                        times.forEach(time => {
+                            let row = `<tr class="hover:bg-gray-50">`;
+                            row += `<td class="p-2 md:p-3 text-xs md:text-sm font-medium text-gray-600 border border-gray-300 bg-gray-100">${time}</td>`;
+                            
+                            days.forEach(day => {
+                                const content = schedule[time] && schedule[time][day] ? schedule[time][day] : '';
+                                row += `<td contenteditable="true" class="p-2 md:p-3 text-xs md:text-sm text-gray-800 border border-gray-300 min-w-[110px] sm:min-w-[120px]">${content}</td>`;
+                            });
+
+                            row += `</tr>`;
+                            tableBody.innerHTML += row;
+                        });
+                    </script>
+                </tbody>
+            </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-4 text-center">Dica: Clique em qualquer célula para editar o conteúdo.</p>
+    </div>
+
+</body>
+</html>

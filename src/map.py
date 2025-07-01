@@ -16,7 +16,7 @@ class Map:
             map_file_path: Caminho para arquivo JSON do mapa (opcional)
         """
         self._layout = []
-        self._cell_size = cell_size if cell_size else sprite_manager.sprite_size
+        self._cell_size = cell_size if cell_size else sprite_manager.base_sprite_size
         self._width = 0
         self._height = 0
         self._metadata = {}
@@ -318,19 +318,22 @@ class Map:
             Vector2D(self._cell_size, self._cell_size)  # Fallback
         )
 
-    def draw(self, screen):
-        """Desenha o mapa na tela"""
+    def draw(self, screen, scale_factor=1.0, offset_x=0, offset_y=0):
+        """Desenha o mapa na tela com escala"""
+        scaled_cell_size = int(self._cell_size * scale_factor)
+        
         for row_idx, row in enumerate(self._layout):
             for col_idx, cell in enumerate(row):
-                x = col_idx * self._cell_size
-                y = row_idx * self._cell_size
-                rect = pygame.Rect(x, y, self._cell_size, self._cell_size)
+                x = int(col_idx * self._cell_size * scale_factor) + offset_x
+                y = int(row_idx * self._cell_size * scale_factor) + offset_y
+                rect = pygame.Rect(x, y, scaled_cell_size, scaled_cell_size)
                 
                 if cell == 1:  # Parede
                     # Desenho procedural das paredes (sem sprites disponíveis)
                     pygame.draw.rect(screen, (0, 0, 255), rect)  # Azul para paredes
-                    # Adiciona borda mais escura para definição
-                    pygame.draw.rect(screen, (0, 0, 200), rect, 1)
+                    
+                    border_width = max(1, int(1 * scale_factor))
+                    pygame.draw.rect(screen, (0, 0, 200), rect, border_width)
                 elif cell == 0:  # Caminho vazio
                     pygame.draw.rect(screen, (0, 0, 0), rect)  # Preto para caminhos
 
@@ -365,14 +368,14 @@ class Map:
         if type == "player":
             # Player tem margem mais apertada para movimento mais preciso e controle responsivo
             # Permite ao jogador navegar por corredores estreitos com mais facilidade
-            half_size = object_size // 2.25  # ~6.15px para sprite de 16px
+            half_size = object_size // 2.125
         elif type == "ghost":
             # Fantasmas têm margem ligeiramente mais generosa para movimento mais fluido
             # Evita que os fantasmas fiquem "presos" em situações de pathfinding
-            half_size = object_size // 3  # ~6.67px para sprite de 16px
+            half_size = object_size // 3  
         else:
             # Default para outros objetos (pellets, itens especiais, etc.)
-            half_size = object_size //3  # ~6.4px para sprite de 16px
+            half_size = object_size //3 
         
         corners = [
             Vector2D(position.x - half_size, position.y - half_size),

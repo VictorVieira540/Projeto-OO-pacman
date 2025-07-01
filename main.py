@@ -41,18 +41,28 @@ class Game:
         except Exception as e:
             print(f"Erro ao inicializar mixer no Game: {e}")
         
+        # Dimensões originais e atuais
+        self._original_width = width
+        self._original_height = height
         self._width = width
         self._height = height
+        
+        # Dimensões escalonadas
+        self._base_map_height = 336
         self._map_height = 336
         self._hud_y_start = self._map_height + 5
-        self._screen = pygame.display.set_mode((self._width, self._height))
+        
+        # Fator de escala global
+        self._scale_factor = 1.0
+        
+        # Configuração da janela
+        self._screen = pygame.display.set_mode((self._width, self._height), pygame.RESIZABLE)
         pygame.display.set_caption("Pac-Man OO - Projeto Orientado a Objetos")
         self._clock = pygame.time.Clock()
         self._state = GameState.MENU
-        self._font_large = pygame.font.Font(None, 48)
-        self._font_medium = pygame.font.Font(None, 32)
-        self._font_small = pygame.font.Font(None, 24)
-        self._font_tiny = pygame.font.Font(None, 22)
+        
+        # Fonts com escala
+        self._update_fonts()
         
         self._initialize_sound_system()
         
@@ -82,6 +92,71 @@ class Game:
         
         self._initialize_campaign()
         self._initialize_game()
+
+    def _update_fonts(self):
+        """Atualiza os tamanhos das fontes baseado na escala"""
+        base_large = 48
+        base_medium = 32
+        base_small = 24
+        base_tiny = 22
+        
+        self._font_large = pygame.font.Font(None, max(12, int(base_large * self._scale_factor)))
+        self._font_medium = pygame.font.Font(None, max(10, int(base_medium * self._scale_factor)))
+        self._font_small = pygame.font.Font(None, max(8, int(base_small * self._scale_factor)))
+        self._font_tiny = pygame.font.Font(None, max(6, int(base_tiny * self._scale_factor)))
+
+    def _calculate_scale_factor(self, new_width, new_height):
+        """Calcula o fator de escala baseado nas novas dimensões"""
+        # Calcula escala baseada na menor dimensão para manter proporções
+        scale_x = new_width / self._original_width
+        scale_y = new_height / self._original_height
+        return min(scale_x, scale_y)
+
+    def _update_scale(self, new_width, new_height):
+        """Atualiza a escala do jogo baseado nas novas dimensões"""
+        self._width = new_width
+        self._height = new_height
+        
+        # Calcula nova escala
+        new_scale = self._calculate_scale_factor(new_width, new_height)
+        
+        if abs(new_scale - self._scale_factor) > 0.01:  # Evita updates muito pequenos
+            self._scale_factor = new_scale
+            
+            # Atualiza dimensões escaladas
+            self._map_height = int(self._base_map_height * self._scale_factor)
+            self._hud_y_start = self._map_height + int(5 * self._scale_factor)
+            
+            # Atualiza escala dos sprites
+            sprite_manager.set_scale_factor(self._scale_factor)
+            
+            # Atualiza fontes
+            self._update_fonts()
+            
+            print(f"Janela redimensionada: {new_width}x{new_height}, escala: {self._scale_factor:.2f}x")
+
+    def _get_scaled_pos(self, x, y):
+        """Converte posições do espaço do jogo para o espaço da tela escalada"""
+        # Centraliza o jogo na tela quando há espaço extra
+        scaled_width = int(self._original_width * self._scale_factor)
+        scaled_height = int(self._original_height * self._scale_factor)
+        
+        offset_x = (self._width - scaled_width) // 2
+        offset_y = (self._height - scaled_height) // 2
+        
+        return (
+            int(x * self._scale_factor) + offset_x,
+            int(y * self._scale_factor) + offset_y
+        )
+
+    def _get_scaled_rect(self, x, y, width, height):
+        """Converte um retângulo para o espaço escalado"""
+        scaled_x, scaled_y = self._get_scaled_pos(x, y)
+        return pygame.Rect(
+            scaled_x, scaled_y,
+            int(width * self._scale_factor),
+            int(height * self._scale_factor)
+        )
 
     def _initialize_sound_system(self):
         sound_manager.set_volume(SoundType.MUSIC, 0.3)
@@ -154,7 +229,7 @@ class Game:
             x=player_pos.x, 
             y=player_pos.y, 
             color=(255, 255, 0), 
-            size=sprite_manager.sprite_size,
+            size=sprite_manager.base_sprite_size,
             speed=1.7,  
             lives=3
         )
@@ -173,7 +248,7 @@ class Game:
                 x=ghost_pos.x,
                 y=ghost_pos.y,
                 color=config["color"],
-                size=sprite_manager.sprite_size,
+                size=sprite_manager.base_sprite_size,
                 speed=1.5,  
                 initial_position=ghost_pos,
                 ghost_type=config["type"]
@@ -187,7 +262,7 @@ class Game:
                 x=pellet_info["position"].x,
                 y=pellet_info["position"].y,
                 color=(255, 255, 255),
-                size=sprite_manager.sprite_size,
+                size=sprite_manager.base_sprite_size,
                 pellet_type=pellet_info["type"],
                 value=pellet_info["value"]
             )
@@ -252,6 +327,11 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+                
+            elif event.type == pygame.VIDEORESIZE:
+                # Trata o redimensionamento da janela
+                self._update_scale(event.w, event.h)
+                self._screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                 
             elif event.type == pygame.KEYDOWN:
                 if self._state == GameState.MENU:
@@ -440,7 +520,7 @@ class Game:
             pellets_to_remove = []
             for pellet in self._pellets:
                 distance = self._player.position.distance_to(pellet.position)
-                collision_radius = sprite_manager.sprite_size // 2
+                collision_radius = sprite_manager.base_sprite_size // 2
                 if distance < collision_radius:
                     points = pellet.be_eaten()
                     self._player.eat_pellet(points)
@@ -482,7 +562,7 @@ class Game:
             
             for ghost in self._ghosts:
                 distance = self._player.position.distance_to(ghost.position)
-                collision_radius = sprite_manager.sprite_size // 2
+                collision_radius = sprite_manager.base_sprite_size // 2
                 if distance < collision_radius:
                     if ghost.state == "vulnerable":
                         self._player.eat_pellet(200)
@@ -502,20 +582,42 @@ class Game:
 
     def _draw_text_centered(self, text, font, color, y_offset=0):
         text_surface = font.render(text, True, color)
-        text_rect = text_surface.get_rect(center=(self._width // 2, self._height // 2 + y_offset))
+        scaled_width = int(self._original_width * self._scale_factor)
+        scaled_height = int(self._original_height * self._scale_factor)
+        
+    
+        offset_x = (self._width - scaled_width) // 2
+        offset_y = (self._height - scaled_height) // 2
+        
+        center_x = offset_x + scaled_width // 2
+        center_y = offset_y + scaled_height // 2 + int(y_offset * self._scale_factor)
+        
+        text_rect = text_surface.get_rect(center=(center_x, center_y))
         self._screen.blit(text_surface, text_rect)
 
     def _draw_hud(self):
+       
+        scaled_width = int(self._original_width * self._scale_factor)
+        scaled_height = int(self._original_height * self._scale_factor)
+        offset_x = (self._width - scaled_width) // 2
+        offset_y = (self._height - scaled_height) // 2
+        
+       
+        hud_start_x = offset_x + int(10 * self._scale_factor)
+        hud_start_y = offset_y + self._hud_y_start
+        hud_width = scaled_width - int(20 * self._scale_factor)
+        
         score_text = self._font_small.render(f"Pontuação: {self._player.score}", True, (255, 255, 255))
-        self._screen.blit(score_text, (10, self._hud_y_start))
+        self._screen.blit(score_text, (hud_start_x, hud_start_y))
         
         lives_text = self._font_small.render(f"Vidas: {self._player.lives}", True, (255, 255, 255))
-        lives_rect = lives_text.get_rect(topright=(self._width - 10, self._hud_y_start))
+        lives_rect = lives_text.get_rect(topright=(hud_start_x + hud_width, hud_start_y))
         self._screen.blit(lives_text, lives_rect)
         
         pellets_remaining = len(self._pellets)
         pellets_text = self._font_small.render(f"Pellets: {pellets_remaining}", True, (255, 255, 255))
-        pellets_rect = pellets_text.get_rect(center=(self._width // 2, self._hud_y_start + 25))
+        center_x = offset_x + scaled_width // 2
+        pellets_rect = pellets_text.get_rect(center=(center_x, hud_start_y + int(25 * self._scale_factor)))
         self._screen.blit(pellets_text, pellets_rect)
         
         pellets_start_x = pellets_rect.left
@@ -559,13 +661,13 @@ class Game:
                 difficulty_label = "MUITO FÁCIL"
             
             difficulty_text = self._font_small.render(f"Dificuldade:{difficulty_label}", True, difficulty_color)
-            self._screen.blit(difficulty_text, (10, self._hud_y_start + 25))
+            self._screen.blit(difficulty_text, (hud_start_x, hud_start_y + int(25 * self._scale_factor)))
         
         if hasattr(self, '_available_maps') and self._available_maps:
             current_map = self._current_map_index + 1
             total_maps = len(self._available_maps)
             campaign_text = self._font_small.render(f"Mapa: {current_map}/{total_maps}", True, (200, 200, 255))
-            campaign_rect = campaign_text.get_rect(topright=(self._width - 10, self._hud_y_start + 25))
+            campaign_rect = campaign_text.get_rect(topright=(hud_start_x + hud_width, hud_start_y + int(25 * self._scale_factor)))
             self._screen.blit(campaign_text, campaign_rect)
             
             if self._current_map_index < len(self._available_maps):
@@ -573,12 +675,12 @@ class Game:
                 if len(map_name) > 20:
                     map_name = map_name[:17] + "..."
                 map_name_text = self._font_small.render(map_name, True, (150, 150, 255))
-                map_name_rect = map_name_text.get_rect(center=(self._width // 2, self._hud_y_start - 40))
+                map_name_rect = map_name_text.get_rect(center=(center_x, hud_start_y - int(40 * self._scale_factor)))
                 self._screen.blit(map_name_text, map_name_rect)
         
         if self._player.power_up_active:
             power_text = self._font_small.render("POWER-UP ATIVO!", True, (255, 255, 0))
-            power_rect = power_text.get_rect(center=(self._width // 2, self._hud_y_start - 20))
+            power_rect = power_text.get_rect(center=(center_x, hud_start_y - int(20 * self._scale_factor)))
             self._screen.blit(power_text, power_rect)
         
         ghosts_in_delay = [ghost for ghost in self._ghosts if ghost.is_in_spawn_delay]
@@ -590,10 +692,16 @@ class Game:
             
             delay_text = "Fantasmas em delay: " + ", ".join(delay_info)
             delay_surface = self._font_small.render(delay_text, True, (220, 0, 0))
-            self._screen.blit(delay_surface, (pellets_start_x, self._hud_y_start + 45))
+            self._screen.blit(delay_surface, (pellets_start_x, hud_start_y + int(45 * self._scale_factor)))
 
     def render(self):
         self._screen.fill((0, 0, 0))
+        
+        # Calcula offset para centralizar o jogo
+        scaled_width = int(self._original_width * self._scale_factor)
+        scaled_height = int(self._original_height * self._scale_factor)
+        offset_x = (self._width - scaled_width) // 2
+        offset_y = (self._height - scaled_height) // 2
         
         if self._state == GameState.MENU:
             self._menu_animation_frame += 1
@@ -601,11 +709,16 @@ class Game:
             for i, option in enumerate(self._menu_options):
                 color = (255, 255, 0) if i == self._selected_option else (255, 255, 255)
                 text_surface = self._font_medium.render(option, True, color)
-                text_rect = text_surface.get_rect(center=(self._width // 2, self._height // 2 - 20 + i * 45))
+                
+                center_x = offset_x + scaled_width // 2
+                center_y = offset_y + scaled_height // 2 - int(20 * self._scale_factor) + int(i * 45 * self._scale_factor)
+                text_rect = text_surface.get_rect(center=(center_x, center_y))
                 self._screen.blit(text_surface, text_rect)
+                
                 if i == self._selected_option:
                     pacman_sprite = sprite_manager.get_pacman_sprite(Direction.RIGHT, self._menu_animation_frame)
-                    sprite_rect = pacman_sprite.get_rect(center=(self._width // 2 - 120, self._height // 2 - 20 + i * 45))
+                    sprite_x = center_x - int(120 * self._scale_factor)
+                    sprite_rect = pacman_sprite.get_rect(center=(sprite_x, center_y))
                     self._screen.blit(pacman_sprite, sprite_rect)
             self._draw_text_centered("Use as setas para navegar e ENTER para selecionar", self._font_small, (200, 200, 200), 120)
 
@@ -623,12 +736,15 @@ class Game:
                 else:
                     text_surface = self._font_small.render(option, True, color)
                 
-                text_rect = text_surface.get_rect(center=(self._width // 2, self._height // 2 - 90 + i * 25))
+                center_x = offset_x + scaled_width // 2
+                center_y = offset_y + scaled_height // 2 - int(90 * self._scale_factor) + int(i * 25 * self._scale_factor)
+                text_rect = text_surface.get_rect(center=(center_x, center_y))
                 self._screen.blit(text_surface, text_rect)
                 
                 if i == self._selected_option_options:
                     pacman_sprite = sprite_manager.get_pacman_sprite(Direction.RIGHT, self._menu_animation_frame)
-                    sprite_rect = pacman_sprite.get_rect(center=(self._width // 2 - 140, self._height // 2 - 90 + i * 25))
+                    sprite_x = center_x - int(140 * self._scale_factor)
+                    sprite_rect = pacman_sprite.get_rect(center=(sprite_x, center_y))
                     self._screen.blit(pacman_sprite, sprite_rect)
             
             self._draw_text_centered("Setas para navegar | ENTER para selecionar", self._font_small, (200, 200, 200), 110)
@@ -666,24 +782,24 @@ class Game:
             self._draw_text_centered("ESQ ou ESC para voltar", self._font_small, (200, 200, 200), 130)
 
         elif self._state == GameState.PLAYING:
-            self._map.draw(self._screen)
+            self._map.draw(self._screen, self._scale_factor, offset_x, offset_y)
             
             for pellet in self._pellets:
-                pellet.draw(self._screen)
+                pellet.draw(self._screen, self._scale_factor, offset_x, offset_y)
             
-            self._player.draw(self._screen)
+            self._player.draw(self._screen, self._scale_factor, offset_x, offset_y)
             for ghost in self._ghosts:
-                ghost.draw(self._screen)
+                ghost.draw(self._screen, self._scale_factor, offset_x, offset_y)
             
             self._draw_hud()
             
         elif self._state == GameState.PAUSED:
-            self._map.draw(self._screen)
+            self._map.draw(self._screen, self._scale_factor, offset_x, offset_y)
             for pellet in self._pellets:
-                pellet.draw(self._screen)
-            self._player.draw(self._screen)
+                pellet.draw(self._screen, self._scale_factor, offset_x, offset_y)
+            self._player.draw(self._screen, self._scale_factor, offset_x, offset_y)
             for ghost in self._ghosts:
-                ghost.draw(self._screen)
+                ghost.draw(self._screen, self._scale_factor, offset_x, offset_y)
             
             pause_surface = pygame.Surface((self._width, self._height))
             pause_surface.set_alpha(128)
@@ -700,15 +816,18 @@ class Game:
             self._draw_text_centered(f"Pellets: {self._total_pellets - len(self._pellets)}/{self._total_pellets}", 
                                    self._font_small, (255, 255, 255), -10)
             if self._input_active:
-                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 30)
+                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 45)
                 name_surface = self._font_medium.render(self._player_name + "|", True, (255, 255, 255))
-                name_rect = name_surface.get_rect(center=(self._width // 2, self._height // 2 + 70))
+               
+                center_x = offset_x + scaled_width // 2
+                center_y = offset_y + scaled_height // 2 + int(85 * self._scale_factor)
+                name_rect = name_surface.get_rect(center=(center_x, center_y))
                 self._screen.blit(name_surface, name_rect)
             elif self._show_save_confirmation:
-                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 30)
+                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 45)
             else:
-                self._draw_text_centered("ENTER - Jogar Novamente", self._font_small, (255, 255, 255), 30)
-                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 55)
+                self._draw_text_centered("ENTER - Jogar Novamente", self._font_small, (255, 255, 255), 45)
+                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 70)
             
         elif self._state == GameState.VICTORY:
             self._draw_text_centered("CAMPANHA COMPLETA!", self._font_large, (255, 215, 0), -100)
@@ -728,15 +847,18 @@ class Game:
                                    self._font_small, (255, 255, 255), 30)
             
             if self._input_active:
-                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 60)
+                self._draw_text_centered("Digite seu nome e pressione ENTER:", self._font_small, (255, 255, 0), 75)
                 name_surface = self._font_medium.render(self._player_name + "|", True, (255, 255, 255))
-                name_rect = name_surface.get_rect(center=(self._width // 2, self._height // 2 + 100))
+               
+                center_x = offset_x + scaled_width // 2
+                center_y = offset_y + scaled_height // 2 + int(115 * self._scale_factor)
+                name_rect = name_surface.get_rect(center=(center_x, center_y))
                 self._screen.blit(name_surface, name_rect)
             elif self._show_save_confirmation:
-                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 60)
+                self._draw_text_centered("Pontuação salva!", self._font_small, (0, 255, 0), 75)
             else:
-                self._draw_text_centered("ENTER - Nova Campanha", self._font_small, (255, 255, 255), 60)
-                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 85)
+                self._draw_text_centered("ENTER - Nova Campanha", self._font_small, (255, 255, 255), 75)
+                self._draw_text_centered("ESC - Menu", self._font_small, (255, 255, 255), 100)
         
         elif self._state == GameState.INTERMISSION:
             self._draw_text_centered("MAPA COMPLETADO!", self._font_large, (0, 255, 0), -120)
