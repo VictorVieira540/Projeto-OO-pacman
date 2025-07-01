@@ -537,7 +537,7 @@ class MapEditor:
         
         pygame.quit()
 
-if __name__ == "__main__":
+def main():
     # Criar diretório de mapas se não existir
     os.makedirs("assets/maps", exist_ok=True)
     
@@ -561,3 +561,6 @@ if __name__ == "__main__":
         print(f"{i+1}: {name}")
     
     editor.run()
+
+if __name__ == "__main__":
+    main()

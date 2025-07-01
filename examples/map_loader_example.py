@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""
-Exemplo de uso do sistema de carregamento de mapas JSON do Pac-Man
-
-Este script demonstra como:
-1. Carregar diferentes mapas JSON
-2. Validar mapas
-3. Criar novos mapas
-4. Gerenciar layouts personalizados
-"""
+"""Exemplo de uso do sistema de carregamento de mapas JSON do Pac-Man"""
 
 import sys
 import os
